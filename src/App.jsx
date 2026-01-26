@@ -231,11 +231,11 @@ const QuoteEditor = () => {
                       </div>
 
                       <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                        <input className="w-24 sm:w-20 px-3 py-2 border rounded text-right text-black" value={item.qty} />
+                        <input className="w-24 sm:w-20 px-3 py-2 border rounded text-center text-black" value={item.qty} />
                         <span>× $</span>
-                        <input className="w-28 sm:w-24 px-3 py-2 border rounded text-right text-black" value={item.unit} />
+                        <input className="w-28 sm:w-24 px-3 py-2 border rounded text-center text-black" value={item.unit} />
                         <span>=</span>
-                        <div className="w-22 sm:w-28 text-right font-semibold text-black">
+                        <div className="w-22 sm:w-28 text-center font-semibold text-black">
                           ${(item.qty * item.unit).toFixed(2)}
                         </div>
                         <Trash2 className="w-4 h-4 text-red-500" />
