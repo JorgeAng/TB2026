@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "building-quote-editor",
   "version": "1.0.0",
   "description": "Interactive building quote editor for Telegram",
