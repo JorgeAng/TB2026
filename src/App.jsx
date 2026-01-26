@@ -1,1 +1,474 @@
+import React, { useState, useEffect } from 'react';
+import { Trash2, Plus, Download, Send } from 'lucide-react';
 
+function App() {
+  const [dimensions, setDimensions] = useState({
+    width: 40,
+    length: 50,
+    height: 16
+  });
+
+  const [config, setConfig] = useState({
+    management: 0.07,
+    pst: 0.07,
+    waste: 0.05,
+    profit: 0.25,
+    gst: 0.05,
+    laborPerSqft: 10,
+    toolExpense: 2000,
+    drafting: 250,
+    studSpacing: 16,
+    topPlates: 2,
+    extraTopPlates: 1,
+    roofPitch: 1/3,
+    overhang: 4
+  });
+
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState({ name: '', qty: 0, unit: 0, category: 'framing' });
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Get Telegram WebApp instance
+  const tg = window.Telegram?.WebApp;
+
+  useEffect(() => {
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      
+      // Read URL parameters for initial dimensions
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('width')) {
+        setDimensions({
+          width: Number(params.get('width')) || 40,
+          length: Number(params.get('length')) || 50,
+          height: Number(params.get('height')) || 16
+        });
+      }
+    }
+  }, []);
+
+  const floorArea = dimensions.width * dimensions.length;
+  const perimeter = 2 * (dimensions.width + dimensions.length);
+  const wallArea = perimeter * dimensions.height;
+  const angleRad = Math.atan(config.roofPitch);
+  const cosAngle = Math.cos(angleRad);
+  const run = dimensions.width / 2;
+  const rafterLen = (run / cosAngle) + config.overhang;
+  const roofArea = rafterLen * dimensions.length * 2;
+  const gableArea = (dimensions.width / 2) * (dimensions.width / 2 * config.roofPitch) * 2;
+
+  const formulas = {
+    1: () => Math.ceil((perimeter * 12) / config.studSpacing),
+    2: () => Math.ceil(perimeter / 16) * config.topPlates,
+    3: () => Math.ceil(perimeter / 16) * config.extraTopPlates,
+    4: () => Math.ceil(perimeter / 16),
+    5: () => Math.ceil(Math.ceil(dimensions.height / 2) * (perimeter / 16)),
+    6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2),
+    7: () => 95,
+    8: () => Math.ceil(perimeter / 4),
+    9: () => Math.ceil(perimeter / 50),
+    10: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 30) / 2000),
+    11: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 35) / 2000),
+    15: () => Math.ceil(roofArea),
+    16: () => Math.ceil(wallArea + gableArea),
+    17: () => Math.ceil(dimensions.length / 10),
+    18: () => Math.ceil((dimensions.length * 0.70) / 16) + 2,
+    19: () => 4,
+    20: () => 4,
+    21: () => Math.ceil(perimeter / 10),
+    22: () => Math.ceil(perimeter / 16),
+    23: () => 5,
+    24: () => Math.ceil(perimeter / 20),
+    25: () => Math.ceil(perimeter / 10),
+    26: () => Math.ceil(perimeter / 10),
+    27: () => Math.ceil(dimensions.length / 10),
+    28: () => Math.ceil((dimensions.length * 2) / 20),
+    29: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallArea + gableArea)) * 1.5 / 1000),
+    30: () => Math.ceil(wallArea * 0.94),
+    31: () => Math.ceil(floorArea),
+    32: () => Math.ceil(perimeter / 10),
+    33: () => Math.ceil(perimeter / 16),
+    34: () => Math.ceil((Math.ceil(wallArea * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
+    38: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
+    39: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
+    40: () => 4,
+    41: () => 2,
+    42: () => 6,
+    43: () => Math.ceil(wallArea * 0.94),
+    44: () => Math.ceil(floorArea),
+    45: () => 1
+  };
+
+  useEffect(() => {
+    const initialItems = [
+      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true },
+      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, enabled: true, hasFormula: true },
+      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, enabled: true, hasFormula: true },
+      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, enabled: true, hasFormula: true },
+      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, enabled: true, hasFormula: true },
+      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, enabled: true, hasFormula: true },
+      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, enabled: true, hasFormula: true },
+      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, enabled: true, hasFormula: true },
+      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, enabled: true, hasFormula: true },
+      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, enabled: true, hasFormula: true },
+      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, enabled: true, hasFormula: true },
+      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, enabled: true, hasFormula: false },
+      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, enabled: true, hasFormula: false },
+      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, enabled: true, hasFormula: false },
+      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, enabled: true, hasFormula: true },
+      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, enabled: true, hasFormula: true },
+      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, enabled: true, hasFormula: true },
+      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, enabled: true, hasFormula: true },
+      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, enabled: true, hasFormula: true },
+      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, enabled: true, hasFormula: true },
+      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, enabled: true, hasFormula: true },
+      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, enabled: true, hasFormula: true },
+      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, enabled: true, hasFormula: true },
+      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, enabled: true, hasFormula: true },
+      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, enabled: true, hasFormula: true },
+      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true },
+      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, enabled: true, hasFormula: true },
+      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, enabled: true, hasFormula: true },
+      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, enabled: true, hasFormula: true },
+      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, enabled: true, hasFormula: true },
+      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, enabled: true, hasFormula: true },
+      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true },
+      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, enabled: true, hasFormula: true },
+      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, enabled: true, hasFormula: true },
+      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, enabled: true, hasFormula: false },
+      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, enabled: true, hasFormula: false },
+      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, enabled: true, hasFormula: false },
+      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, enabled: true, hasFormula: true },
+      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, enabled: true, hasFormula: true },
+      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, enabled: true, hasFormula: true },
+      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, enabled: true, hasFormula: true },
+      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, enabled: true, hasFormula: true },
+      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, enabled: true, hasFormula: true },
+      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, enabled: true, hasFormula: true },
+      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, enabled: true, hasFormula: true }
+    ];
+    setItems(initialItems);
+  }, []);
+
+  useEffect(() => {
+    setItems(prevItems => prevItems.map(item => {
+      if (item.hasFormula && formulas[item.id]) {
+        return { ...item, qty: formulas[item.id]() };
+      }
+      return item;
+    }));
+  }, [dimensions, config.studSpacing]);
+
+  const updateQty = (id, newQty) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, qty: Math.max(0, Number(newQty)) } : item
+    ));
+  };
+
+  const updateUnit = (id, newUnit) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, unit: Math.max(0, Number(newUnit)) } : item
+    ));
+  };
+
+  const toggleItem = (id) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, enabled: !item.enabled } : item
+    ));
+  };
+
+  const removeItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const addItem = () => {
+    if (newItem.name && newItem.qty > 0 && newItem.unit > 0) {
+      setItems([...items, { 
+        id: Math.max(...items.map(i => i.id)) + 1, 
+        ...newItem, 
+        qty: Number(newItem.qty),
+        unit: Number(newItem.unit),
+        enabled: true,
+        hasFormula: false
+      }]);
+      setNewItem({ name: '', qty: 0, unit: 0, category: 'framing' });
+      setShowAddForm(false);
+    }
+  };
+
+  const updateDimension = (field, value) => {
+    setDimensions(prev => ({
+      ...prev,
+      [field]: Math.max(1, Number(value) || 0)
+    }));
+  };
+
+  const materialTotal = items
+    .filter(item => item.enabled)
+    .reduce((sum, item) => sum + (item.qty * item.unit), 0);
+
+  const otherItems = config.toolExpense + config.drafting;
+  const management = materialTotal * config.management;
+  const pst = materialTotal * config.pst;
+  const waste = materialTotal * config.waste;
+  const profit = materialTotal * config.profit;
+  const buildingWithoutLabor = materialTotal + otherItems + management + pst + waste + profit;
+  const labor = floorArea * config.laborPerSqft;
+  const totalQuoted = buildingWithoutLabor + labor;
+  const gst = totalQuoted * config.gst;
+  const finalPrice = totalQuoted + gst;
+
+  const categories = {
+    framing: '📐 Framing',
+    openings: '🚪 Doors & Windows',
+    exterior: '🏠 Exterior Metal & Trim',
+    interior: '🎨 Interior Finishing',
+    insulation: '🧊 Insulation & Wraps'
+  };
+
+  const exportQuote = () => {
+    const text = `BUILDING QUOTE ESTIMATE\n\n` +
+      `Building: ${dimensions.width}×${dimensions.length}×${dimensions.height} ft\n\n` +
+      Object.entries(categories).map(([key, label]) => {
+        const catItems = items.filter(i => i.category === key && i.enabled);
+        if (catItems.length === 0) return '';
+        return `${label}\n` + catItems.map(i => 
+          `  ${i.name}: ${i.qty} × $${i.unit.toFixed(2)} = $${(i.qty * i.unit).toFixed(2)}`
+        ).join('\n');
+      }).filter(Boolean).join('\n\n') +
+      `\n\nMATERIALS TOTAL: $${materialTotal.toFixed(2)}\n` +
+      `Other Items: $${otherItems.toFixed(2)}\n` +
+      `Management (7%): $${management.toFixed(2)}\n` +
+      `PST (7%): $${pst.toFixed(2)}\n` +
+      `Waste (5%): $${waste.toFixed(2)}\n` +
+      `Profit (25%): $${profit.toFixed(2)}\n\n` +
+      `Building Cost (no labor): $${buildingWithoutLabor.toFixed(2)}\n` +
+      `Labor: $${labor.toFixed(2)}\n\n` +
+      `TOTAL QUOTED: $${totalQuoted.toFixed(2)}\n` +
+      `GST (5%): $${gst.toFixed(2)}\n` +
+      `FINAL PRICE: $${finalPrice.toFixed(2)}`;
+    
+    if (tg) {
+      tg.sendData(JSON.stringify({
+        quote: text,
+        finalPrice: finalPrice.toFixed(2),
+        dimensions
+      }));
+    } else {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'quote.txt';
+      a.click();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Quote Editor</h1>
+            <button
+              onClick={exportQuote}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+            >
+              {tg ? <Send className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+              {tg ? 'Send' : 'Export'}
+            </button>
+          </div>
+
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-200 mb-6">
+            <h2 className="text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.width}
+                  onChange={(e) => updateDimension('width', e.target.value)}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Length (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.length}
+                  onChange={(e) => updateDimension('length', e.target.value)}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Height (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.height}
+                  onChange={(e) => updateDimension('height', e.target.value)}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Floor</div>
+                <div className="text-sm sm:text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sf</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Walls</div>
+                <div className="text-sm sm:text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sf</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Roof</div>
+                <div className="text-sm sm:text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sf</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Perimeter</div>
+                <div className="text-sm sm:text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+              <div className="text-xs sm:text-sm text-blue-600 font-medium">Materials</div>
+              <div className="text-lg sm:text-2xl font-bold text-blue-900">${(materialTotal/1000).toFixed(1)}k</div>
+            </div>
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+              <div className="text-xs sm:text-sm text-green-600 font-medium">Building</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-900">${(buildingWithoutLabor/1000).toFixed(1)}k</div>
+            </div>
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200">
+              <div className="text-xs sm:text-sm text-purple-600 font-medium">Quoted</div>
+              <div className="text-lg sm:text-2xl font-bold text-purple-900">${(totalQuoted/1000).toFixed(1)}k</div>
+            </div>
+            <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+              <div className="text-xs sm:text-sm text-orange-600 font-medium">Final</div>
+              <div className="text-lg sm:text-2xl font-bold text-orange-900">${(finalPrice/1000).toFixed(1)}k</div>
+            </div>
+          </div>
+
+          {Object.entries(categories).map(([categoryKey, categoryLabel]) => {
+            const categoryItems = items.filter(item => item.category === categoryKey);
+            const categoryTotal = categoryItems
+              .filter(item => item.enabled)
+              .reduce((sum, item) => sum + (item.qty * item.unit), 0);
+
+            return (
+              <div key={categoryKey} className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-700">{categoryLabel}</h2>
+                  <div className="text-xs sm:text-sm font-medium text-slate-600">
+                    ${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {categoryItems.map(item => (
+                    <div
+                      key={item.id}
+                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-all text-xs sm:text-base ${
+                        item.enabled 
+                          ? 'bg-white border-slate-200 hover:border-slate-300' 
+                          : 'bg-slate-50 border-slate-100 opacity-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.enabled}
+                        onChange={() => toggleItem(item.id)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <div className="flex-1 font-medium text-slate-700 text-xs sm:text-sm">{item.name}</div>
+                      <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => updateQty(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-12 sm:w-20 px-1 sm:px-2 py-1 border border-slate-300 rounded text-right disabled:bg-slate-100 text-xs sm:text-sm"
+                        />
+                        <span className="text-slate-500 hidden sm:inline">×</span>
+                        <span className="text-slate-500 hidden sm:inline">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unit}
+                          onChange={(e) => updateUnit(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-16 sm:w-24 px-1 sm:px-2 py-1 border border-slate-300 rounded text-right disabled:bg-slate-100 text-xs sm:text-sm"
+                        />
+                        <div className="w-16 sm:w-28 text-right font-semibold text-slate-800 text-xs sm:text-sm">
+                          ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                        </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="bg-slate-50 p-4 sm:p-6 rounded-lg border border-slate-200">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Quote Breakdown</h3>
+            <div className="space-y-2 text-xs sm:text-sm">
+              <div className="flex justify-between">
+                <span>Materials Total:</span>
+                <span className="font-semibold">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Other Items:</span>
+                <span className="font-semibold">${otherItems.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Profit (25%):</span>
+                <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
+                <span>Building Cost:</span>
+                <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Labor ({floorArea} sf × ${config.laborPerSqft}):</span>
+                <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-base sm:text-lg">
+                <span>Total Quoted:</span>
+                <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>GST (5%):</span>
+                <span>${gst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-lg sm:text-xl text-blue-700">
+                <span>FINAL PRICE:</span>
+                <span>${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;Management (7%):</span>
+                <span>${management.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>PST (7%):</span>
+                <span>${pst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Waste (5%):</span>
+                <span>${waste.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>
