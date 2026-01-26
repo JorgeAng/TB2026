@@ -3,8 +3,8 @@ import { Trash2, Plus, Download } from 'lucide-react';
 
 const QuoteEditor = () => {
   const [dimensions, setDimensions] = useState({
-    width: 40,
-    length: 50,
+    width: 0,
+    length: 0,
     height: 16
   });
 
@@ -29,15 +29,15 @@ const QuoteEditor = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Calculate derived values from dimensions
-  const floorArea = dimensions.width * dimensions.length;
-  const perimeter = 2 * (dimensions.width + dimensions.length);
-  const wallArea = perimeter * dimensions.height;
+  const floorArea = (dimensions.width || 0) * (dimensions.length || 0);
+  const perimeter = 2 * ((dimensions.width || 0) + (dimensions.length || 0));
+  const wallArea = perimeter * (dimensions.height || 0);
   const angleRad = Math.atan(config.roofPitch);
   const cosAngle = Math.cos(angleRad);
-  const run = dimensions.width / 2;
+  const run = (dimensions.width || 0) / 2;
   const rafterLen = (run / cosAngle) + config.overhang;
-  const roofArea = rafterLen * dimensions.length * 2;
-  const gableArea = (dimensions.width / 2) * (dimensions.width / 2 * config.roofPitch) * 2;
+  const roofArea = rafterLen * (dimensions.length || 0) * 2;
+  const gableArea = ((dimensions.width || 0) / 2) * ((dimensions.width || 0) / 2 * config.roofPitch) * 2;
 
   // Formula definitions for each item
   const formulas = {
@@ -182,9 +182,10 @@ const QuoteEditor = () => {
   };
 
   const updateDimension = (field, value) => {
+    const numValue = value === '' ? '' : Math.max(0, Number(value));
     setDimensions(prev => ({
       ...prev,
-      [field]: Math.max(1, Number(value) || 0)
+      [field]: numValue
     }));
   };
 
@@ -499,15 +500,15 @@ const QuoteEditor = () => {
                 <span>Profit (25%):</span>
                 <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold text-slate-600">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
                 <span>Building Cost (no labor):</span>
                 <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between">
                 <span>Labor ({floorArea} sqft × ${config.laborPerSqft}):</span>
-                <span className="font-semibold ">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg text-slate-600">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg">
                 <span>Total Quoted:</span>
                 <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
