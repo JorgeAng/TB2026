@@ -20,8 +20,9 @@ const QuoteEditor = () => {
     studSpacing: 16,
     topPlates: 2,
     extraTopPlates: 1,
-    roofPitch: 1/3,
-    overhang: 4
+    roofPitchRise: 4,
+    roofPitchRun: 12,
+    overhang: 0
   });
 
   const [items, setItems] = useState([]);
@@ -31,13 +32,20 @@ const QuoteEditor = () => {
   // Calculate derived values from dimensions
   const floorArea = (dimensions.width || 0) * (dimensions.length || 0);
   const perimeter = 2 * ((dimensions.width || 0) + (dimensions.length || 0));
-  const wallArea = perimeter * (dimensions.height || 0);
-  const angleRad = Math.atan(config.roofPitch);
+  const wallAreaRect = perimeter * (dimensions.height +1|| 0);
+  
+  // Calculate gable roof geometry
+  const roofPitch = config.roofPitchRise / config.roofPitchRun; // 4/12 = 0.333...
+  const angleRad = Math.atan(roofPitch);
   const cosAngle = Math.cos(angleRad);
   const run = (dimensions.width || 0) / 2;
+  const rise = run * roofPitch;
   const rafterLen = (run / cosAngle) + config.overhang;
   const roofArea = rafterLen * (dimensions.length || 0) * 2;
-  const gableArea = ((dimensions.width || 0) / 2) * ((dimensions.width || 0) / 2 * config.roofPitch) * 2;
+  
+  // Gable area: 2 triangular ends (base * height / 2) * 2 ends, then multiply by 2
+  const gableArea = (((dimensions.width || 0) * rise / 2) * 2) * 2;
+  const wallArea = wallAreaRect;
 
   // Formula definitions for each item
   const formulas = {
@@ -53,7 +61,7 @@ const QuoteEditor = () => {
     10: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 30) / 2000),
     11: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 35) / 2000),
     15: () => Math.ceil(roofArea),
-    16: () => Math.ceil(wallArea + gableArea),
+    16: () => Math.ceil(wallAreaRect + gableArea),
     17: () => Math.ceil(dimensions.length / 10),
     18: () => Math.ceil((dimensions.length * 0.70) / 16) + 2,
     19: () => 4,
@@ -66,18 +74,18 @@ const QuoteEditor = () => {
     26: () => Math.ceil(perimeter / 10),
     27: () => Math.ceil(dimensions.length / 10),
     28: () => Math.ceil((dimensions.length * 2) / 20),
-    29: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallArea + gableArea)) * 1.5 / 1000),
-    30: () => Math.ceil(wallArea * 0.94),
+    29: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallAreaRect + gableArea)) * 1.5 / 1000),
+    30: () => Math.ceil(wallAreaRect * 0.94),
     31: () => Math.ceil(floorArea),
     32: () => Math.ceil(perimeter / 10),
     33: () => Math.ceil(perimeter / 16),
-    34: () => Math.ceil((Math.ceil(wallArea * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
-    38: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
-    39: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
+    34: () => Math.ceil((Math.ceil(wallAreaRect * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
+    38: () => Math.ceil(Math.ceil(wallAreaRect * 0.94) / 1000),
+    39: () => Math.ceil(Math.ceil(wallAreaRect * 0.94) / 1000),
     40: () => 4,
     41: () => 2,
     42: () => 6,
-    43: () => Math.ceil(wallArea * 0.94),
+    43: () => Math.ceil(wallAreaRect * 0.94),
     44: () => Math.ceil(floorArea),
     45: () => 1
   };
@@ -290,7 +298,41 @@ const QuoteEditor = () => {
                 />
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-sm">
+            
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Roof Pitch (Rise/Run)</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number"
+                    value={config.roofPitchRise}
+                    onChange={(e) => setConfig({...config, roofPitchRise: Math.max(0, Number(e.target.value) || 0)})}
+                    className="w-20 px-3 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="4"
+                  />
+                  <span className="text-indigo-900 font-semibold">/</span>
+                  <input
+                    type="number"
+                    value={config.roofPitchRun}
+                    onChange={(e) => setConfig({...config, roofPitchRun: Math.max(1, Number(e.target.value) || 12)})}
+                    className="w-20 px-3 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="12"
+                  />
+                  <span className="text-indigo-700 text-sm ml-2">(e.g., 4/12)</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Overhang (inches)</label>
+                <input
+                  type="number"
+                  value={config.overhang}
+                  onChange={(e) => setConfig({...config, overhang: Math.max(0, Number(e.target.value) || 0)})}
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-sm">
               <div className="bg-white/60 p-2 rounded">
                 <div className="text-indigo-600 font-medium text-xs sm:text-sm">Floor Area</div>
                 <div className="text-base sm:text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sqft</div>
@@ -302,6 +344,10 @@ const QuoteEditor = () => {
               <div className="bg-white/60 p-2 rounded">
                 <div className="text-indigo-600 font-medium text-xs sm:text-sm">Roof Area</div>
                 <div className="text-base sm:text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sqft</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Gable Area</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{Math.ceil(gableArea).toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
                 <div className="text-indigo-600 font-medium text-xs sm:text-sm">Perimeter</div>
@@ -370,7 +416,7 @@ const QuoteEditor = () => {
                           value={item.qty}
                           onChange={(e) => updateQty(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-16 sm:w-20 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100"
+                          className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100"
                         />
                         <span className="text-slate-500 text-sm">×</span>
                         <span className="text-slate-500 text-sm">$</span>
