@@ -28,6 +28,7 @@ const QuoteEditor = () => {
   const [newItem, setNewItem] = useState({ name: '', qty: 0, unit: 0, category: 'framing' });
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Calculate derived values from dimensions
   const floorArea = dimensions.width * dimensions.length;
   const perimeter = 2 * (dimensions.width + dimensions.length);
   const wallArea = perimeter * dimensions.height;
@@ -38,6 +39,7 @@ const QuoteEditor = () => {
   const roofArea = rafterLen * dimensions.length * 2;
   const gableArea = (dimensions.width / 2) * (dimensions.width / 2 * config.roofPitch) * 2;
 
+  // Formula definitions for each item
   const formulas = {
     1: () => Math.ceil((perimeter * 12) / config.studSpacing),
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
@@ -80,8 +82,9 @@ const QuoteEditor = () => {
     45: () => 1
   };
 
+  // Initialize items with formulas
   useEffect(() => {
-    setItems([
+    const initialItems = [
       { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true },
       { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, enabled: true, hasFormula: true },
       { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, enabled: true, hasFormula: true },
@@ -127,20 +130,69 @@ const QuoteEditor = () => {
       { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, enabled: true, hasFormula: true },
       { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, enabled: true, hasFormula: true },
       { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, enabled: true, hasFormula: true }
-    ]);
+    ];
+    setItems(initialItems);
   }, []);
 
+  // Recalculate quantities when dimensions change
   useEffect(() => {
-    setItems(prev =>
-      prev.map(item =>
-        item.hasFormula && formulas[item.id]
-          ? { ...item, qty: formulas[item.id]() }
-          : item
-      )
-    );
+    setItems(prevItems => prevItems.map(item => {
+      if (item.hasFormula && formulas[item.id]) {
+        return { ...item, qty: formulas[item.id]() };
+      }
+      return item;
+    }));
   }, [dimensions, config.studSpacing]);
 
-  const materialTotal = items.filter(i => i.enabled).reduce((s, i) => s + i.qty * i.unit, 0);
+  const updateQty = (id, newQty) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, qty: Math.max(0, Number(newQty)) } : item
+    ));
+  };
+
+  const updateUnit = (id, newUnit) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, unit: Math.max(0, Number(newUnit)) } : item
+    ));
+  };
+
+  const toggleItem = (id) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, enabled: !item.enabled } : item
+    ));
+  };
+
+  const removeItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const addItem = () => {
+    if (newItem.name && newItem.qty > 0 && newItem.unit > 0) {
+      setItems([...items, { 
+        id: Math.max(...items.map(i => i.id)) + 1, 
+        ...newItem, 
+        qty: Number(newItem.qty),
+        unit: Number(newItem.unit),
+        enabled: true,
+        hasFormula: false
+      }]);
+      setNewItem({ name: '', qty: 0, unit: 0, category: 'framing' });
+      setShowAddForm(false);
+    }
+  };
+
+  const updateDimension = (field, value) => {
+    setDimensions(prev => ({
+      ...prev,
+      [field]: Math.max(1, Number(value) || 0)
+    }));
+  };
+
+  // Calculate totals
+  const materialTotal = items
+    .filter(item => item.enabled)
+    .reduce((sum, item) => sum + (item.qty * item.unit), 0);
+
   const otherItems = config.toolExpense + config.drafting;
   const management = materialTotal * config.management;
   const pst = materialTotal * config.pst;
@@ -160,85 +212,183 @@ const QuoteEditor = () => {
     insulation: '🧊 Insulation & Wraps'
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-24 sm:mb-6">
+  const exportQuote = () => {
+    const text = `BUILDING QUOTE ESTIMATE\n\n` +
+      Object.entries(categories).map(([key, label]) => {
+        const catItems = items.filter(i => i.category === key && i.enabled);
+        if (catItems.length === 0) return '';
+        return `${label}\n` + catItems.map(i => 
+          `  ${i.name}: ${i.qty} × $${i.unit.toFixed(2)} = $${(i.qty * i.unit).toFixed(2)}`
+        ).join('\n');
+      }).filter(Boolean).join('\n\n') +
+      `\n\n` +
+      `MATERIALS TOTAL: $${materialTotal.toFixed(2)}\n` +
+      `Other Items: $${otherItems.toFixed(2)}\n` +
+      `Management (7%): $${management.toFixed(2)}\n` +
+      `PST (7%): $${pst.toFixed(2)}\n` +
+      `Waste (5%): $${waste.toFixed(2)}\n` +
+      `Profit (25%): $${profit.toFixed(2)}\n\n` +
+      `Building Cost (no labor): $${buildingWithoutLabor.toFixed(2)}\n` +
+      `Labor: $${labor.toFixed(2)}\n\n` +
+      `TOTAL QUOTED: $${totalQuoted.toFixed(2)}\n` +
+      `GST (5%): $${gst.toFixed(2)}\n` +
+      `FINAL PRICE: $${finalPrice.toFixed(2)}`;
+    
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quote.txt';
+    a.click();
+  };
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
-              Interactive Quote Editor
-            </h1>
-            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
+            <button
+              onClick={exportQuote}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <Download className="w-4 h-4" />
               Export Quote
             </button>
           </div>
 
           {/* Building Dimensions */}
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-200 mb-6">
-            <h2 className="text-lg font-semibold text-indigo-900 mb-4">
-              🏗️ Building Dimensions
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {['width','length','height'].map(f => (
-                <div key={f}>
-                  <label className="block text-sm font-medium text-indigo-700 mb-2 capitalize">
-                    {f} (ft)
-                  </label>
-                  <input
-                    type="number"
-                    value={dimensions[f]}
-                    onChange={e => setDimensions(p => ({...p,[f]:Number(e.target.value)||0}))}
-                    className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg"
-                  />
-                </div>
-              ))}
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg border-2 border-indigo-200 mb-6">
+            <h2 className="text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.width}
+                  onChange={(e) => updateDimension('width', e.target.value)}
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Length (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.length}
+                  onChange={(e) => updateDimension('length', e.target.value)}
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Height (ft)</label>
+                <input
+                  type="number"
+                  value={dimensions.height}
+                  onChange={(e) => updateDimension('height', e.target.value)}
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
             </div>
-
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-              <Stat label="Floor Area" value={`${floorArea} sqft`} />
-              <Stat label="Wall Area" value={`${Math.ceil(wallArea)} sqft`} />
-              <Stat label="Roof Area" value={`${Math.ceil(roofArea)} sqft`} />
-              <Stat label="Perimeter" value={`${perimeter} ft`} />
+            <div className="mt-4 grid grid-cols-4 gap-3 text-sm">
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Floor Area</div>
+                <div className="text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sqft</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Wall Area</div>
+                <div className="text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sqft</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Roof Area</div>
+                <div className="text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sqft</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium">Perimeter</div>
+                <div className="text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
+              </div>
             </div>
           </div>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Summary label="Materials" value={materialTotal} color="blue" />
-            <Summary label="Building Cost" value={buildingWithoutLabor} color="green" />
-            <Summary label="Total Quoted" value={totalQuoted} color="purple" />
-            <Summary label="Final (+ GST)" value={finalPrice} color="orange" />
+          {/* Summary Panel */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="text-sm text-blue-600 font-medium">Materials</div>
+              <div className="text-2xl font-bold text-blue-900">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="text-sm text-green-600 font-medium">Building Cost</div>
+              <div className="text-2xl font-bold text-green-900">${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="text-sm text-purple-600 font-medium">Total Quoted</div>
+              <div className="text-2xl font-bold text-purple-900">${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              <div className="text-sm text-orange-600 font-medium">Final (+ GST)</div>
+              <div className="text-2xl font-bold text-orange-900">${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            </div>
           </div>
 
-          {/* Items */}
-          {Object.entries(categories).map(([key,label]) => {
-            const list = items.filter(i => i.category === key);
+          {/* Items by Category */}
+          {Object.entries(categories).map(([categoryKey, categoryLabel]) => {
+            const categoryItems = items.filter(item => item.category === categoryKey);
+            const categoryTotal = categoryItems
+              .filter(item => item.enabled)
+              .reduce((sum, item) => sum + (item.qty * item.unit), 0);
+
             return (
-              <div key={key} className="mb-6">
-                <h2 className="text-xl font-semibold text-slate-700 mb-3">{label}</h2>
+              <div key={categoryKey} className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-xl font-semibold text-slate-700">{categoryLabel}</h2>
+                  <div className="text-sm font-medium text-slate-600">
+                    Subtotal: ${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  {list.map(item => (
+                  {categoryItems.map(item => (
                     <div
                       key={item.id}
-                      className="flex flex-col sm:flex-row gap-3 p-3 rounded-lg border bg-white text-black"
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                        item.enabled 
+                          ? 'bg-white border-slate-200 hover:border-slate-300' 
+                          : 'bg-slate-50 border-slate-100 opacity-50'
+                      }`}
                     >
-                      <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base">
-                        {item.name}
-                      </div>
-
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                        <input className="w-24 sm:w-20 px-3 py-2 border rounded text-center text-black" value={item.qty} />
-                        <span>× $</span>
-                        <input className="w-28 sm:w-24 px-3 py-2 border rounded text-center text-black" value={item.unit} />
-                        <span>=</span>
-                        <div className="w-22 sm:w-28 text-center font-semibold text-black">
-                          ${(item.qty * item.unit).toFixed(2)}
+                      <input
+                        type="checkbox"
+                        checked={item.enabled}
+                        onChange={() => toggleItem(item.id)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <div className="flex-1 font-medium text-slate-700">{item.name}</div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => updateQty(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-20 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
+                        />
+                        <span className="text-slate-500">×</span>
+                        <span className="text-slate-500">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unit}
+                          onChange={(e) => updateUnit(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-24 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
+                        />
+                        <span className="text-slate-500">=</span>
+                        <div className="w-28 text-right font-semibold text-slate-800">
+                          ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 2})}
                         </div>
-                        <Trash2 className="w-4 h-4 text-red-500" />
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -246,41 +396,131 @@ const QuoteEditor = () => {
               </div>
             );
           })}
-        </div>
-      </div>
 
-      {/* Sticky Mobile Bar */}
-      <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t shadow-lg p-3 z-50">
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="text-xs text-slate-500">Final Price</div>
-            <div className="text-lg font-bold text-blue-700">
-              ${finalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          {/* Add Item Form */}
+          {showAddForm ? (
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+              <h3 className="text-lg font-semibold mb-3">Add New Item</h3>
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Item Name</label>
+                  <input
+                    type="text"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                    placeholder="e.g., Custom Trim"
+                  />
+                </div>
+                <div className="w-32">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    value={newItem.qty}
+                    onChange={(e) => setNewItem({...newItem, qty: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  />
+                </div>
+                <div className="w-32">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Unit Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newItem.unit}
+                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  />
+                </div>
+                <div className="w-40">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                  <select
+                    value={newItem.category}
+                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  >
+                    {Object.entries(categories).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={addItem}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-4 py-2 bg-slate-300 text-slate-700 rounded hover:bg-slate-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors mb-6"
+            >
+              <Plus className="w-4 h-4" />
+              Add Custom Item
+            </button>
+          )}
+
+          {/* Totals Breakdown */}
+          <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+            <h3 className="text-black font-semibold mb-4">Quote Breakdown</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Materials Total:</span>
+                <span className="font-semibold">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Other Items (Tool Expense + Drafting):</span>
+                <span className="font-semibold">${otherItems.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Management Fee (7%):</span>
+                <span>${management.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>PST (7%):</span>
+                <span>${pst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Waste (5%):</span>
+                <span>${waste.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Profit (25%):</span>
+                <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
+                <span>Building Cost (no labor):</span>
+                <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Labor ({floorArea} sqft × ${config.laborPerSqft}):</span>
+                <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg">
+                <span>Total Quoted:</span>
+                <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>GST (5%):</span>
+                <span>${gst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-xl text-blue-700">
+                <span>FINAL PRICE:</span>
+                <span>${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
             </div>
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-            Export
-          </button>
         </div>
       </div>
     </div>
   );
 };
-
-const Stat = ({label,value}) => (
-  <div className="bg-white/60 p-2 rounded">
-    <div className="text-indigo-600 font-medium">{label}</div>
-    <div className="text-lg font-bold text-indigo-900">{value}</div>
-  </div>
-);
-
-const Summary = ({label,value,color}) => (
-  <div className={`bg-${color}-50 p-4 rounded-lg border`}>
-    <div className={`text-sm text-${color}-600 font-medium`}>{label}</div>
-    <div className={`text-2xl font-bold text-${color}-900`}>
-      ${value.toLocaleString('en-US',{minimumFractionDigits:2})}
-    </div>
-  </div>
-);
 
 export default QuoteEditor;
