@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Download, Send } from 'lucide-react';
+import { Trash2, Plus, Download } from 'lucide-react';
 
-function App() {
+const QuoteEditor = () => {
   const [dimensions, setDimensions] = useState({
     width: 40,
     length: 50,
@@ -28,26 +28,7 @@ function App() {
   const [newItem, setNewItem] = useState({ name: '', qty: 0, unit: 0, category: 'framing' });
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Get Telegram WebApp instance
-  const tg = window.Telegram?.WebApp;
-
-  useEffect(() => {
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      
-      // Read URL parameters for initial dimensions
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('width')) {
-        setDimensions({
-          width: Number(params.get('width')) || 40,
-          length: Number(params.get('length')) || 50,
-          height: Number(params.get('height')) || 16
-        });
-      }
-    }
-  }, []);
-
+  // Calculate derived values from dimensions
   const floorArea = dimensions.width * dimensions.length;
   const perimeter = 2 * (dimensions.width + dimensions.length);
   const wallArea = perimeter * dimensions.height;
@@ -58,6 +39,7 @@ function App() {
   const roofArea = rafterLen * dimensions.length * 2;
   const gableArea = (dimensions.width / 2) * (dimensions.width / 2 * config.roofPitch) * 2;
 
+  // Formula definitions for each item
   const formulas = {
     1: () => Math.ceil((perimeter * 12) / config.studSpacing),
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
@@ -100,6 +82,7 @@ function App() {
     45: () => 1
   };
 
+  // Initialize items with formulas
   useEffect(() => {
     const initialItems = [
       { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true },
@@ -151,6 +134,7 @@ function App() {
     setItems(initialItems);
   }, []);
 
+  // Recalculate quantities when dimensions change
   useEffect(() => {
     setItems(prevItems => prevItems.map(item => {
       if (item.hasFormula && formulas[item.id]) {
@@ -204,6 +188,7 @@ function App() {
     }));
   };
 
+  // Calculate totals
   const materialTotal = items
     .filter(item => item.enabled)
     .reduce((sum, item) => sum + (item.qty * item.unit), 0);
@@ -229,7 +214,6 @@ function App() {
 
   const exportQuote = () => {
     const text = `BUILDING QUOTE ESTIMATE\n\n` +
-      `Building: ${dimensions.width}×${dimensions.length}×${dimensions.height} ft\n\n` +
       Object.entries(categories).map(([key, label]) => {
         const catItems = items.filter(i => i.category === key && i.enabled);
         if (catItems.length === 0) return '';
@@ -237,7 +221,8 @@ function App() {
           `  ${i.name}: ${i.qty} × $${i.unit.toFixed(2)} = $${(i.qty * i.unit).toFixed(2)}`
         ).join('\n');
       }).filter(Boolean).join('\n\n') +
-      `\n\nMATERIALS TOTAL: $${materialTotal.toFixed(2)}\n` +
+      `\n\n` +
+      `MATERIALS TOTAL: $${materialTotal.toFixed(2)}\n` +
       `Other Items: $${otherItems.toFixed(2)}\n` +
       `Management (7%): $${management.toFixed(2)}\n` +
       `PST (7%): $${pst.toFixed(2)}\n` +
@@ -249,107 +234,102 @@ function App() {
       `GST (5%): $${gst.toFixed(2)}\n` +
       `FINAL PRICE: $${finalPrice.toFixed(2)}`;
     
-    if (tg) {
-      tg.sendData(JSON.stringify({
-        quote: text,
-        finalPrice: finalPrice.toFixed(2),
-        dimensions
-      }));
-    } else {
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'quote.txt';
-      a.click();
-    }
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quote.txt';
+    a.click();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Quote Editor</h1>
+            <h1 className="text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
             <button
               onClick={exportQuote}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {tg ? <Send className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-              {tg ? 'Send' : 'Export'}
+              <Download className="w-4 h-4" />
+              Export Quote
             </button>
           </div>
 
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-200 mb-6">
+          {/* Building Dimensions */}
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg border-2 border-indigo-200 mb-6">
             <h2 className="text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
                 <input
                   type="number"
                   value={dimensions.width}
                   onChange={(e) => updateDimension('width', e.target.value)}
-                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Length (ft)</label>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Length (ft)</label>
                 <input
                   type="number"
                   value={dimensions.length}
                   onChange={(e) => updateDimension('length', e.target.value)}
-                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-indigo-700 mb-2">Height (ft)</label>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Height (ft)</label>
                 <input
                   type="number"
                   value={dimensions.height}
                   onChange={(e) => updateDimension('height', e.target.value)}
-                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
+            <div className="mt-4 grid grid-cols-4 gap-3 text-sm">
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Floor</div>
-                <div className="text-sm sm:text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sf</div>
+                <div className="text-indigo-600 font-medium">Floor Area</div>
+                <div className="text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Walls</div>
-                <div className="text-sm sm:text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sf</div>
+                <div className="text-indigo-600 font-medium">Wall Area</div>
+                <div className="text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Roof</div>
-                <div className="text-sm sm:text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sf</div>
+                <div className="text-indigo-600 font-medium">Roof Area</div>
+                <div className="text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
                 <div className="text-indigo-600 font-medium">Perimeter</div>
-                <div className="text-sm sm:text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
+                <div className="text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
-            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
-              <div className="text-xs sm:text-sm text-blue-600 font-medium">Materials</div>
-              <div className="text-lg sm:text-2xl font-bold text-blue-900">${(materialTotal/1000).toFixed(1)}k</div>
+          {/* Summary Panel */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="text-sm text-blue-600 font-medium">Materials</div>
+              <div className="text-2xl font-bold text-blue-900">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
-              <div className="text-xs sm:text-sm text-green-600 font-medium">Building</div>
-              <div className="text-lg sm:text-2xl font-bold text-green-900">${(buildingWithoutLabor/1000).toFixed(1)}k</div>
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="text-sm text-green-600 font-medium">Building Cost</div>
+              <div className="text-2xl font-bold text-green-900">${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200">
-              <div className="text-xs sm:text-sm text-purple-600 font-medium">Quoted</div>
-              <div className="text-lg sm:text-2xl font-bold text-purple-900">${(totalQuoted/1000).toFixed(1)}k</div>
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="text-sm text-purple-600 font-medium">Total Quoted</div>
+              <div className="text-2xl font-bold text-purple-900">${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
-              <div className="text-xs sm:text-sm text-orange-600 font-medium">Final</div>
-              <div className="text-lg sm:text-2xl font-bold text-orange-900">${(finalPrice/1000).toFixed(1)}k</div>
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              <div className="text-sm text-orange-600 font-medium">Final (+ GST)</div>
+              <div className="text-2xl font-bold text-orange-900">${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
           </div>
 
+          {/* Items by Category */}
           {Object.entries(categories).map(([categoryKey, categoryLabel]) => {
             const categoryItems = items.filter(item => item.category === categoryKey);
             const categoryTotal = categoryItems
@@ -359,16 +339,16 @@ function App() {
             return (
               <div key={categoryKey} className="mb-6">
                 <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-700">{categoryLabel}</h2>
-                  <div className="text-xs sm:text-sm font-medium text-slate-600">
-                    ${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                  <h2 className="text-xl font-semibold text-slate-700">{categoryLabel}</h2>
+                  <div className="text-sm font-medium text-slate-600">
+                    Subtotal: ${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {categoryItems.map(item => (
                     <div
                       key={item.id}
-                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-all text-xs sm:text-base ${
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                         item.enabled 
                           ? 'bg-white border-slate-200 hover:border-slate-300' 
                           : 'bg-slate-50 border-slate-100 opacity-50'
@@ -380,33 +360,34 @@ function App() {
                         onChange={() => toggleItem(item.id)}
                         className="w-4 h-4 text-blue-600 rounded"
                       />
-                      <div className="flex-1 font-medium text-slate-700 text-xs sm:text-sm">{item.name}</div>
-                      <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                      <div className="flex-1 font-medium text-slate-700">{item.name}</div>
+                      <div className="flex items-center gap-2">
                         <input
                           type="number"
                           value={item.qty}
                           onChange={(e) => updateQty(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-12 sm:w-20 px-1 sm:px-2 py-1 border border-slate-300 rounded text-right disabled:bg-slate-100 text-xs sm:text-sm"
+                          className="w-20 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
                         />
-                        <span className="text-slate-500 hidden sm:inline">×</span>
-                        <span className="text-slate-500 hidden sm:inline">$</span>
+                        <span className="text-slate-500">×</span>
+                        <span className="text-slate-500">$</span>
                         <input
                           type="number"
                           step="0.01"
                           value={item.unit}
                           onChange={(e) => updateUnit(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-16 sm:w-24 px-1 sm:px-2 py-1 border border-slate-300 rounded text-right disabled:bg-slate-100 text-xs sm:text-sm"
+                          className="w-24 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
                         />
-                        <div className="w-16 sm:w-28 text-right font-semibold text-slate-800 text-xs sm:text-sm">
-                          ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                        <span className="text-slate-500">=</span>
+                        <div className="w-28 text-right font-semibold text-slate-800">
+                          ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 2})}
                         </div>
                         <button
                           onClick={() => removeItem(item.id)}
                           className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
                         >
-                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -416,50 +397,90 @@ function App() {
             );
           })}
 
-          <div className="bg-slate-50 p-4 sm:p-6 rounded-lg border border-slate-200">
-            <h3 className="text-base sm:text-lg font-semibold mb-4">Quote Breakdown</h3>
-            <div className="space-y-2 text-xs sm:text-sm">
-              <div className="flex justify-between">
+          {/* Add Item Form */}
+          {showAddForm ? (
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+              <h3 className="text-lg font-semibold mb-3">Add New Item</h3>
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Item Name</label>
+                  <input
+                    type="text"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                    placeholder="e.g., Custom Trim"
+                  />
+                </div>
+                <div className="w-32">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    value={newItem.qty}
+                    onChange={(e) => setNewItem({...newItem, qty: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  />
+                </div>
+                <div className="w-32">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Unit Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newItem.unit}
+                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  />
+                </div>
+                <div className="w-40">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                  <select
+                    value={newItem.category}
+                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded"
+                  >
+                    {Object.entries(categories).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={addItem}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-4 py-2 bg-slate-300 text-slate-700 rounded hover:bg-slate-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors mb-6"
+            >
+              <Plus className="w-4 h-4" />
+              Add Custom Item
+            </button>
+          )}
+
+          {/* Totals Breakdown */}
+          <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+            <h3 className="text-black font-semibold mb-4">Quote Breakdown</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
                 <span>Materials Total:</span>
                 <span className="font-semibold">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Other Items:</span>
+              <div className="flex justify-between text-slate-600">
+                <span>Other Items (Tool Expense + Drafting):</span>
                 <span className="font-semibold">${otherItems.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Profit (25%):</span>
-                <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
-                <span>Building Cost:</span>
-                <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Labor ({floorArea} sf × ${config.laborPerSqft}):</span>
-                <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-base sm:text-lg">
-                <span>Total Quoted:</span>
-                <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>GST (5%):</span>
-                <span>${gst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-lg sm:text-xl text-blue-700">
-                <span>FINAL PRICE:</span>
-                <span>${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default App;Management (7%):</span>
+                <span>Management Fee (7%):</span>
                 <span>${management.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
               <div className="flex justify-between text-slate-600">
@@ -471,4 +492,35 @@ export default App;Management (7%):</span>
                 <span>${waste.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>
+                <span>Profit (25%):</span>
+                <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
+                <span>Building Cost (no labor):</span>
+                <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Labor ({floorArea} sqft × ${config.laborPerSqft}):</span>
+                <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg">
+                <span>Total Quoted:</span>
+                <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>GST (5%):</span>
+                <span>${gst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-xl text-blue-700">
+                <span>FINAL PRICE:</span>
+                <span>${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuoteEditor;
