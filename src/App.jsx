@@ -500,15 +500,15 @@ const QuoteEditor = () => {
                 <span>Profit (25%):</span>
                 <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold text-slate-600">
                 <span>Building Cost (no labor):</span>
                 <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-slate-600">
                 <span>Labor ({floorArea} sqft × ${config.laborPerSqft}):</span>
                 <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg text-slate-600">
                 <span>Total Quoted:</span>
                 <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
