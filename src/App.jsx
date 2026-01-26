@@ -235,7 +235,7 @@ const QuoteEditor = () => {
                         <span>× $</span>
                         <input className="w-28 sm:w-24 px-3 py-2 border rounded text-right text-black" value={item.unit} />
                         <span>=</span>
-                        <div className="w-full sm:w-28 text-right font-semibold text-black">
+                        <div className="w-22 sm:w-28 text-right font-semibold text-black">
                           ${(item.qty * item.unit).toFixed(2)}
                         </div>
                         <Trash2 className="w-4 h-4 text-red-500" />
