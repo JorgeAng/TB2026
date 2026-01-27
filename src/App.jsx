@@ -26,6 +26,14 @@ const QuoteEditor = () => {
   const [newItem, setNewItem] = useState({ name: '', qty: 0, unit: 0, category: 'framing' });
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Load global default prices from localStorage
+  const loadDefaultPrices = () => {
+    const saved = localStorage.getItem('timbilt_default_prices');
+    return saved ? JSON.parse(saved) : {};
+  };
+
+  const [defaultPrices, setDefaultPrices] = useState(loadDefaultPrices());
+
   // Calculate derived values from dimensions
   const floorArea = (dimensions.width || 0) * (dimensions.length || 0);
   const perimeter = 2 * ((dimensions.width || 0) + (dimensions.length || 0));
@@ -87,55 +95,57 @@ const QuoteEditor = () => {
 
   // Initialize items with formulas
   useEffect(() => {
+    const getPrice = (id, basePrice) => defaultPrices[id] !== undefined ? defaultPrices[id] : basePrice;
+    
     const initialItems = [
-      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, defaultUnit: 18.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, defaultUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, defaultUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, defaultUnit: 36.18, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, defaultUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, defaultUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, defaultUnit: 7.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, defaultUnit: 2.23, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, defaultUnit: 15.29, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, defaultUnit: 6.73, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, defaultUnit: 75.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, defaultUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, defaultUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, defaultUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, defaultUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, defaultUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, defaultUnit: 28.86, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, defaultUnit: 11.62, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, defaultUnit: 24.42, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, defaultUnit: 35.97, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, defaultUnit: 8.77, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, defaultUnit: 9.38, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, defaultUnit: 35.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, defaultUnit: 18.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, defaultUnit: 18.28, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, defaultUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, defaultUnit: 21.64, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, defaultUnit: 1.60, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, defaultUnit: 0.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, defaultUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, defaultUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, defaultUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, defaultUnit: 27.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, defaultUnit: 0.08, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, defaultUnit: 46.20, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, defaultUnit: 33.39, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, defaultUnit: 112.12, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, defaultUnit: 111.71, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, defaultUnit: 123.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, defaultUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, defaultUnit: 13.15, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, defaultUnit: 14.09, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, defaultUnit: 0.65, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, defaultUnit: 1.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, defaultUnit: 220.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false }
+      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: getPrice(1, 18.19), baseUnit: 18.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: getPrice(2, 6.03), baseUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: getPrice(3, 6.03), baseUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: getPrice(4, 36.18), baseUnit: 36.18, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: getPrice(5, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: getPrice(6, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: getPrice(7, 7.10), baseUnit: 7.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: getPrice(8, 2.23), baseUnit: 2.23, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: getPrice(9, 15.29), baseUnit: 15.29, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: getPrice(10, 6.73), baseUnit: 6.73, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: getPrice(11, 75.50), baseUnit: 75.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: getPrice(12, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: getPrice(13, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: getPrice(14, 89.99), baseUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: getPrice(15, 1.21), baseUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: getPrice(16, 1.21), baseUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: getPrice(17, 28.86), baseUnit: 28.86, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: getPrice(18, 11.62), baseUnit: 11.62, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: getPrice(19, 24.42), baseUnit: 24.42, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: getPrice(20, 35.97), baseUnit: 35.97, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: getPrice(21, 8.77), baseUnit: 8.77, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: getPrice(22, 9.38), baseUnit: 9.38, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: getPrice(23, 35.07), baseUnit: 35.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: getPrice(24, 18.00), baseUnit: 18.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: getPrice(25, 18.28), baseUnit: 18.28, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: getPrice(26, 9.66), baseUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: getPrice(27, 21.64), baseUnit: 21.64, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: getPrice(28, 1.60), baseUnit: 1.60, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: getPrice(29, 0.10), baseUnit: 0.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: getPrice(30, 1.17), baseUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: getPrice(31, 1.17), baseUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: getPrice(32, 9.66), baseUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: getPrice(33, 27.07), baseUnit: 27.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: getPrice(34, 0.08), baseUnit: 0.08, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: getPrice(35, 46.20), baseUnit: 46.20, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: getPrice(36, 33.39), baseUnit: 33.39, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: getPrice(37, 112.12), baseUnit: 112.12, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: getPrice(38, 111.71), baseUnit: 111.71, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: getPrice(39, 123.19), baseUnit: 123.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: getPrice(40, 11.87), baseUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: getPrice(41, 13.15), baseUnit: 13.15, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: getPrice(42, 14.09), baseUnit: 14.09, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: getPrice(43, 0.65), baseUnit: 0.65, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: getPrice(44, 1.50), baseUnit: 1.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: getPrice(45, 220.00), baseUnit: 220.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false }
     ];
     setItems(initialItems);
-  }, []);
+  }, [defaultPrices]);
 
   // Recalculate quantities when dimensions change (only for items without manual override)
   useEffect(() => {
@@ -162,37 +172,29 @@ const QuoteEditor = () => {
       item.id === id ? { 
         ...item, 
         unit: Math.max(0, Number(newUnit)),
-        manualPriceOverride: Number(newUnit) !== item.defaultUnit
+        manualPriceOverride: Number(newUnit) !== (defaultPrices[id] !== undefined ? defaultPrices[id] : item.baseUnit)
       } : item
     ));
   };
 
   const lockPriceUpdate = (id) => {
-    const updatedItems = items.map(item => {
-      if (item.id === id) {
-        console.log('Locking price for item:', item.name, 'New default:', item.unit);
-        return { 
-          ...item, 
-          defaultUnit: item.unit,
-          manualPriceOverride: false
-        };
-      }
-      return item;
-    });
+    const item = items.find(i => i.id === id);
+    if (!item) return;
     
-    setItems(updatedItems);
+    // Update global default prices
+    const newDefaultPrices = {
+      ...defaultPrices,
+      [id]: item.unit
+    };
+    setDefaultPrices(newDefaultPrices);
+    localStorage.setItem('timbilt_default_prices', JSON.stringify(newDefaultPrices));
     
-    // Save to localStorage immediately
-    if (projectName) {
-      const projectData = {
-        projectName,
-        dimensions,
-        config,
-        items: updatedItems
-      };
-      localStorage.setItem(`quote_${projectName}`, JSON.stringify(projectData));
-      console.log('Price update saved to localStorage immediately');
-    }
+    // Remove the manual override flag
+    setItems(items.map(i => 
+      i.id === id ? { ...i, manualPriceOverride: false } : i
+    ));
+    
+    console.log('Updated global default price for item:', item.name, 'New price:', item.unit);
   };
 
   const toggleItem = (id) => {
@@ -212,7 +214,7 @@ const QuoteEditor = () => {
         ...newItem,
         qty: Number(newItem.qty),
         unit: Number(newItem.unit),
-        defaultUnit: Number(newItem.unit),
+        baseUnit: Number(newItem.unit),
         enabled: true,
         hasFormula: false,
         manualOverride: false,
@@ -283,17 +285,14 @@ const QuoteEditor = () => {
     }
     const data = JSON.parse(saved);
     console.log('Loading project:', projectName);
-    console.log('Items from storage:', data.items.map(i => ({ id: i.id, name: i.name, unit: i.unit, defaultUnit: i.defaultUnit })));
     setDimensions(data.dimensions);
     setConfig(data.config);
-    // Ensure all items have defaultUnit property
-    const itemsWithDefaults = data.items.map(item => ({
+    // Load items as-is from the saved project
+    setItems(data.items.map(item => ({
       ...item,
-      defaultUnit: item.defaultUnit !== undefined ? item.defaultUnit : item.unit,
-      manualPriceOverride: item.manualPriceOverride || false
-    }));
-    console.log('Items after processing:', itemsWithDefaults.map(i => ({ id: i.id, name: i.name, unit: i.unit, defaultUnit: i.defaultUnit })));
-    setItems(itemsWithDefaults);
+      baseUnit: item.baseUnit || item.unit, // backward compatibility
+      manualPriceOverride: false // reset price override flag
+    })));
   };
 
   // List Saved project
