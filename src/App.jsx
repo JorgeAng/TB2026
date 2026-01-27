@@ -3,8 +3,8 @@ import { Trash2, Plus, Download } from 'lucide-react';
 
 const QuoteEditor = () => {
   const [dimensions, setDimensions] = useState({
-    width: 40,
-    length: 50,
+    width: 0,
+    length: 0,
     height: 16
   });
 
@@ -19,9 +19,10 @@ const QuoteEditor = () => {
     drafting: 250,
     studSpacing: 16,
     topPlates: 2,
-    extraTopPlates: 1,
-    roofPitch: 1/3,
-    overhang: 4
+    extraTopPlates: 4,
+    roofPitchRise: 4,
+    roofPitchRun: 12,
+    overhang: 0
   });
 
   const [items, setItems] = useState([]);
@@ -29,31 +30,38 @@ const QuoteEditor = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Calculate derived values from dimensions
-  const floorArea = dimensions.width * dimensions.length;
-  const perimeter = 2 * (dimensions.width + dimensions.length);
-  const wallArea = perimeter * dimensions.height;
-  const angleRad = Math.atan(config.roofPitch);
+  const floorArea = (dimensions.width || 0) * (dimensions.length || 0);
+  const perimeter = 2 * ((dimensions.width || 0) + (dimensions.length || 0));
+  const wallAreaRect = perimeter * (dimensions.height +1|| 0);
+  
+  // Calculate gable roof geometry
+  const roofPitch = config.roofPitchRise / config.roofPitchRun; // 4/12 = 0.333...
+  const angleRad = Math.atan(roofPitch);
   const cosAngle = Math.cos(angleRad);
-  const run = dimensions.width / 2;
+  const run = (dimensions.width || 0) / 2;
+  const rise = run * roofPitch;
   const rafterLen = (run / cosAngle) + config.overhang;
-  const roofArea = rafterLen * dimensions.length * 2;
-  const gableArea = (dimensions.width / 2) * (dimensions.width / 2 * config.roofPitch) * 2;
+  const roofArea = rafterLen * (dimensions.length || 0) * 2;
+  
+  // Gable area: 2 triangular ends (base * height / 2) * 2 ends, then multiply by 2
+  const gableArea = (((dimensions.width || 0) * rise / 2) * 2) * 2;
+  const wallArea = wallAreaRect;
 
   // Formula definitions for each item
   const formulas = {
     1: () => Math.ceil((perimeter * 12) / config.studSpacing),
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
-    3: () => Math.ceil(perimeter / 16) * config.extraTopPlates,
+    3: () => config.extraTopPlates,
     4: () => Math.ceil(perimeter / 16),
-    5: () => Math.ceil(Math.ceil(dimensions.height / 2) * (perimeter / 16)),
-    6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2),
+    5: () => Math.ceil(Math.ceil((dimensions.height +1)/ 2) * (perimeter / 16)),
+    6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2* 1.7),
     7: () => 95,
     8: () => Math.ceil(perimeter / 4),
     9: () => Math.ceil(perimeter / 50),
     10: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 30) / 2000),
     11: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 35) / 2000),
     15: () => Math.ceil(roofArea),
-    16: () => Math.ceil(wallArea + gableArea),
+    16: () => Math.ceil(wallAreaRect + gableArea),
     17: () => Math.ceil(dimensions.length / 10),
     18: () => Math.ceil((dimensions.length * 0.70) / 16) + 2,
     19: () => 4,
@@ -66,18 +74,18 @@ const QuoteEditor = () => {
     26: () => Math.ceil(perimeter / 10),
     27: () => Math.ceil(dimensions.length / 10),
     28: () => Math.ceil((dimensions.length * 2) / 20),
-    29: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallArea + gableArea)) * 1.5 / 1000),
-    30: () => Math.ceil(wallArea * 0.94),
+    29: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallAreaRect + gableArea)) * 1.5 / 1000),
+    30: () => Math.ceil(wallAreaRect * 0.94),
     31: () => Math.ceil(floorArea),
     32: () => Math.ceil(perimeter / 10),
     33: () => Math.ceil(perimeter / 16),
-    34: () => Math.ceil((Math.ceil(wallArea * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
-    38: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
-    39: () => Math.ceil(Math.ceil(wallArea * 0.94) / 1000),
+    34: () => Math.ceil((Math.ceil(wallAreaRect * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
+    38: () => Math.ceil(Math.ceil(wallAreaRect * 0.94) / 1000),
+    39: () => Math.ceil(Math.ceil(wallAreaRect * 0.94) / 1000),
     40: () => 4,
     41: () => 2,
     42: () => 6,
-    43: () => Math.ceil(wallArea * 0.94),
+    43: () => Math.ceil(wallAreaRect * 0.94),
     44: () => Math.ceil(floorArea),
     45: () => 1
   };
@@ -182,9 +190,10 @@ const QuoteEditor = () => {
   };
 
   const updateDimension = (field, value) => {
+    const numValue = value === '' ? '' : Math.max(0, Number(value));
     setDimensions(prev => ({
       ...prev,
-      [field]: Math.max(1, Number(value) || 0)
+      [field]: numValue
     }));
   };
 
@@ -243,24 +252,24 @@ const QuoteEditor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
-            <button
-              onClick={exportQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Export Quote
-            </button>
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
+              <button
+                onClick={exportQuote}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
+              >
+            <Download className="w-4 h-4" />
+           Export PDF
+          </button>
           </div>
 
           {/* Building Dimensions */}
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg border-2 border-indigo-200 mb-6">
-            <h2 className="text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-200 mb-6">
+            <h2 className="text-base sm:text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
                 <input
@@ -289,43 +298,81 @@ const QuoteEditor = () => {
                 />
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-4 gap-3 text-sm">
+            
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Roof Pitch (Rise/Run)</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number"
+                    value={config.roofPitchRise}
+                    onChange={(e) => setConfig({...config, roofPitchRise: Math.max(0, Number(e.target.value) || 0)})}
+                    className="w-20 px-3 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="4"
+                  />
+                  <span className="text-indigo-900 font-semibold">/</span>
+                  <input
+                    type="number"
+                    value={config.roofPitchRun}
+                    onChange={(e) => setConfig({...config, roofPitchRun: Math.max(1, Number(e.target.value) || 12)})}
+                    className="w-20 px-3 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="12"
+                  />
+                  <span className="text-indigo-700 text-sm ml-2">(e.g., 4/12)</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Overhang (inches)</label>
+                <input
+                  type="number"
+                  value={config.overhang}
+                  onChange={(e) => setConfig({...config, overhang: Math.max(0, Number(e.target.value) || 0)})}
+                  className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-sm">
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Floor Area</div>
-                <div className="text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sqft</div>
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Floor Area</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{floorArea.toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Wall Area</div>
-                <div className="text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sqft</div>
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Wall Area</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{Math.ceil(wallArea).toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Roof Area</div>
-                <div className="text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sqft</div>
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Roof Area</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{Math.ceil(roofArea).toLocaleString()} sqft</div>
               </div>
               <div className="bg-white/60 p-2 rounded">
-                <div className="text-indigo-600 font-medium">Perimeter</div>
-                <div className="text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Gable Area</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{Math.ceil(gableArea).toLocaleString()} sqft</div>
+              </div>
+              <div className="bg-white/60 p-2 rounded">
+                <div className="text-indigo-600 font-medium text-xs sm:text-sm">Perimeter</div>
+                <div className="text-base sm:text-lg font-bold text-indigo-900">{perimeter.toLocaleString()} ft</div>
               </div>
             </div>
           </div>
 
           {/* Summary Panel */}
-          <div className="grid grid-cols-4 gap-4 mb-8">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-sm text-blue-600 font-medium">Materials</div>
-              <div className="text-2xl font-bold text-blue-900">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+              <div className="text-xs sm:text-sm text-blue-600 font-medium">Materials</div>
+              <div className="text-lg sm:text-2xl font-bold text-blue-900">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="text-sm text-green-600 font-medium">Building Cost</div>
-              <div className="text-2xl font-bold text-green-900">${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+              <div className="text-xs sm:text-sm text-green-600 font-medium">Building Cost</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-900">${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <div className="text-sm text-purple-600 font-medium">Total Quoted</div>
-              <div className="text-2xl font-bold text-purple-900">${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200">
+              <div className="text-xs sm:text-sm text-purple-600 font-medium">Total Quoted</div>
+              <div className="text-lg sm:text-2xl font-bold text-purple-900">${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <div className="text-sm text-orange-600 font-medium">Final (+ GST)</div>
-              <div className="text-2xl font-bold text-orange-900">${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+            <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+              <div className="text-xs sm:text-sm text-orange-600 font-medium">Final (+ GST)</div>
+              <div className="text-lg sm:text-2xl font-bold text-orange-900">${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
             </div>
           </div>
 
@@ -338,9 +385,9 @@ const QuoteEditor = () => {
 
             return (
               <div key={categoryKey} className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-xl font-semibold text-slate-700">{categoryLabel}</h2>
-                  <div className="text-sm font-medium text-slate-600">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0 mb-3">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-700">{categoryLabel}</h2>
+                  <div className="text-xs sm:text-sm font-medium text-slate-600">
                     Subtotal: ${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
                   </div>
                 </div>
@@ -348,44 +395,46 @@ const QuoteEditor = () => {
                   {categoryItems.map(item => (
                     <div
                       key={item.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                      className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-lg border transition-all ${
                         item.enabled 
                           ? 'bg-white border-slate-200 hover:border-slate-300' 
                           : 'bg-slate-50 border-slate-100 opacity-50'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={item.enabled}
-                        onChange={() => toggleItem(item.id)}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <div className="flex-1 font-medium text-slate-700">{item.name}</div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1">
+                        <input
+                          type="checkbox"
+                          checked={item.enabled}
+                          onChange={() => toggleItem(item.id)}
+                          className="w-4 h-4 text-blue-600 rounded flex-shrink-0"
+                        />
+                        <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base">{item.name}</div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto ml-6 sm:ml-0">
                         <input
                           type="number"
                           value={item.qty}
                           onChange={(e) => updateQty(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-20 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
+                          className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-center text-black text-sm disabled:bg-slate-100"
                         />
-                        <span className="text-slate-500">×</span>
-                        <span className="text-slate-500">$</span>
+                        <span className="text-slate-500 text-sm">×</span>
+                        <span className="text-slate-500 text-sm">$</span>
                         <input
                           type="number"
                           step="0.01"
                           value={item.unit}
                           onChange={(e) => updateUnit(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-24 px-2 py-1 border border-slate-300 rounded text-right text-black disabled:bg-slate-100"
+                          className="w-20 sm:w-24 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100"
                         />
-                        <span className="text-slate-500">=</span>
-                        <div className="w-28 text-right font-semibold text-slate-800">
+                        <span className="text-slate-500 text-sm">=</span>
+                        <div className="w-24 sm:w-28 text-right font-semibold text-slate-800 text-sm sm:text-base">
                           ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 2})}
                         </div>
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -400,8 +449,8 @@ const QuoteEditor = () => {
           {/* Add Item Form */}
           {showAddForm ? (
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-              <h3 className="text-lg font-semibold mb-3">Add New Item</h3>
-              <div className="flex gap-3 items-end">
+              <h3 className="text-base sm:text-lg font-semibold mb-3">Add New Item</h3>
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Item Name</label>
                   <input
@@ -412,7 +461,7 @@ const QuoteEditor = () => {
                     placeholder="e.g., Custom Trim"
                   />
                 </div>
-                <div className="w-32">
+                <div className="w-full sm:w-32">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
                   <input
                     type="number"
@@ -421,7 +470,7 @@ const QuoteEditor = () => {
                     className="w-full px-3 py-2 border border-slate-300 rounded"
                   />
                 </div>
-                <div className="w-32">
+                <div className="w-full sm:w-32">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Unit Price</label>
                   <input
                     type="number"
@@ -431,7 +480,7 @@ const QuoteEditor = () => {
                     className="w-full px-3 py-2 border border-slate-300 rounded"
                   />
                 </div>
-                <div className="w-40">
+                <div className="w-full sm:w-40">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
                   <select
                     value={newItem.category}
@@ -443,24 +492,26 @@ const QuoteEditor = () => {
                     ))}
                   </select>
                 </div>
-                <button
-                  onClick={addItem}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                >
-                  Add
-                </button>
-                <button
-                  onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 bg-slate-300 text-slate-700 rounded hover:bg-slate-400 transition-colors"
-                >
-                  Cancel
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={addItem}
+                    className="flex-1 sm:flex-initial px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => setShowAddForm(false)}
+                    className="flex-1 sm:flex-initial px-4 py-2 bg-slate-300 text-slate-700 rounded hover:bg-slate-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors mb-6"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors mb-6 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4" />
               Add Custom Item
@@ -468,9 +519,9 @@ const QuoteEditor = () => {
           )}
 
           {/* Totals Breakdown */}
-          <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
-            <h3 className="text-black font-semibold mb-4">Quote Breakdown</h3>
-            <div className="space-y-2 text-sm">
+          <div className="bg-slate-50 p-4 sm:p-6 rounded-lg border border-slate-200">
+            <h3 className="text-base sm:text-lg text-black font-semibold mb-4">Quote Breakdown</h3>
+            <div className="space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between text-slate-600">
                 <span>Materials Total:</span>
                 <span className="font-semibold">${materialTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
@@ -495,15 +546,15 @@ const QuoteEditor = () => {
                 <span>Profit (25%):</span>
                 <span>${profit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-semibold text-slate-600">
                 <span>Building Cost (no labor):</span>
                 <span>${buildingWithoutLabor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-slate-600">
                 <span>Labor ({floorArea} sqft × ${config.laborPerSqft}):</span>
                 <span className="font-semibold">${labor.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg">
+              <div className="border-t border-slate-300 pt-2 mt-2 flex justify-between font-bold text-lg text-slate-600">
                 <span>Total Quoted:</span>
                 <span>${totalQuoted.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
@@ -511,7 +562,7 @@ const QuoteEditor = () => {
                 <span>GST (5%):</span>
                 <span>${gst.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-xl text-blue-700">
+              <div className="border-t-2 border-slate-400 pt-3 mt-3 flex justify-between font-bold text-lg sm:text-xl text-blue-700">
                 <span>FINAL PRICE:</span>
                 <span>${finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
               </div>
