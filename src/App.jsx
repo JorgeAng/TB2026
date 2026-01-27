@@ -168,13 +168,31 @@ const QuoteEditor = () => {
   };
 
   const lockPriceUpdate = (id) => {
-    setItems(items.map(item => 
-      item.id === id ? { 
-        ...item, 
-        defaultUnit: item.unit,
-        manualPriceOverride: false
-      } : item
-    ));
+    const updatedItems = items.map(item => {
+      if (item.id === id) {
+        console.log('Locking price for item:', item.name, 'New default:', item.unit);
+        return { 
+          ...item, 
+          defaultUnit: item.unit,
+          manualPriceOverride: false
+        };
+      }
+      return item;
+    });
+    
+    setItems(updatedItems);
+    
+    // Save to localStorage immediately
+    if (projectName) {
+      const projectData = {
+        projectName,
+        dimensions,
+        config,
+        items: updatedItems
+      };
+      localStorage.setItem(`quote_${projectName}`, JSON.stringify(projectData));
+      console.log('Price update saved to localStorage immediately');
+    }
   };
 
   const toggleItem = (id) => {
@@ -244,8 +262,10 @@ const QuoteEditor = () => {
       projectName,
       dimensions,
       config,
-      items // This now includes manualOverride flags
+      items // This now includes manualOverride flags and defaultUnit
     };
+    console.log('Saving project:', projectName);
+    console.log('Items being saved:', items.map(i => ({ id: i.id, name: i.name, unit: i.unit, defaultUnit: i.defaultUnit })));
     localStorage.setItem(`quote_${projectName}`, JSON.stringify(projectData));
     alert('Project saved');
   };
@@ -262,6 +282,8 @@ const QuoteEditor = () => {
       return;
     }
     const data = JSON.parse(saved);
+    console.log('Loading project:', projectName);
+    console.log('Items from storage:', data.items.map(i => ({ id: i.id, name: i.name, unit: i.unit, defaultUnit: i.defaultUnit })));
     setDimensions(data.dimensions);
     setConfig(data.config);
     // Ensure all items have defaultUnit property
@@ -270,6 +292,7 @@ const QuoteEditor = () => {
       defaultUnit: item.defaultUnit !== undefined ? item.defaultUnit : item.unit,
       manualPriceOverride: item.manualPriceOverride || false
     }));
+    console.log('Items after processing:', itemsWithDefaults.map(i => ({ id: i.id, name: i.name, unit: i.unit, defaultUnit: i.defaultUnit })));
     setItems(itemsWithDefaults);
   };
 
