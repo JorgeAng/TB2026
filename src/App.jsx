@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Download } from 'lucide-react';
-
+import { jsPDF } from 'jspdf';
 const QuoteEditor = () => {
   const [dimensions, setDimensions] = useState({
     width: 0,
@@ -222,34 +222,109 @@ const QuoteEditor = () => {
   };
 
   const exportQuote = () => {
-    const text = `BUILDING QUOTE ESTIMATE\n\n` +
-      Object.entries(categories).map(([key, label]) => {
-        const catItems = items.filter(i => i.category === key && i.enabled);
-        if (catItems.length === 0) return '';
-        return `${label}\n` + catItems.map(i => 
-          `  ${i.name}: ${i.qty} × $${i.unit.toFixed(2)} = $${(i.qty * i.unit).toFixed(2)}`
-        ).join('\n');
-      }).filter(Boolean).join('\n\n') +
-      `\n\n` +
-      `MATERIALS TOTAL: $${materialTotal.toFixed(2)}\n` +
-      `Other Items: $${otherItems.toFixed(2)}\n` +
-      `Management (7%): $${management.toFixed(2)}\n` +
-      `PST (7%): $${pst.toFixed(2)}\n` +
-      `Waste (5%): $${waste.toFixed(2)}\n` +
-      `Profit (25%): $${profit.toFixed(2)}\n\n` +
-      `Building Cost (no labor): $${buildingWithoutLabor.toFixed(2)}\n` +
-      `Labor: $${labor.toFixed(2)}\n\n` +
-      `TOTAL QUOTED: $${totalQuoted.toFixed(2)}\n` +
-      `GST (5%): $${gst.toFixed(2)}\n` +
-      `FINAL PRICE: $${finalPrice.toFixed(2)}`;
+  // Dynamically import jsPDF
+
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let yPos = 20;
+  
+  // Title
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('BUILDING QUOTE ESTIMATE', margin, yPos);
+  yPos += 10;
+  
+  // Building dimensions
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun}`, margin, yPos);
+  yPos += 5;
+  doc.text(`Floor: ${floorArea} sqft | Wall: ${Math.ceil(wallArea)} sqft | Roof: ${Math.ceil(roofArea)} sqft`, margin, yPos);
+  yPos += 10;
+  
+  // Items by category
+  Object.entries(categories).forEach(([key, label]) => {
+    const catItems = items.filter(i => i.category === key && i.enabled);
+    if (catItems.length === 0) return;
     
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'quote.txt';
-    a.click();
-  };
+    // Check if we need a new page
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(label, margin, yPos);
+    yPos += 6;
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    
+    catItems.forEach(item => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      const itemText = `${item.name}`;
+      const qtyText = `${item.qty} × $${item.unit.toFixed(2)}`;
+      const totalText = `$${(item.qty * item.unit).toFixed(2)}`;
+      
+      doc.text(itemText, margin + 2, yPos);
+      doc.text(qtyText, pageWidth - margin - 60, yPos);
+      doc.text(totalText, pageWidth - margin - 30, yPos, { align: 'right' });
+      yPos += 5;
+    });
+    
+    yPos += 3;
+  });
+  
+  // Totals section
+  if (yPos > 200) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  yPos += 5;
+  doc.setFontSize(10);
+  
+  const totals = [
+    ['Materials Total:', `$${materialTotal.toFixed(2)}`],
+    ['Other Items:', `$${otherItems.toFixed(2)}`],
+    ['Management (7%):', `$${management.toFixed(2)}`],
+    ['PST (7%):', `$${pst.toFixed(2)}`],
+    ['Waste (5%):', `$${waste.toFixed(2)}`],
+    ['Profit (25%):', `$${profit.toFixed(2)}`],
+    ['', ''],
+    ['Building Cost (no labor):', `$${buildingWithoutLabor.toFixed(2)}`],
+    ['Labor:', `$${labor.toFixed(2)}`],
+    ['', ''],
+    ['TOTAL QUOTED:', `$${totalQuoted.toFixed(2)}`],
+    ['GST (5%):', `$${gst.toFixed(2)}`],
+    ['', '']
+  ];
+  
+  totals.forEach(([label, value]) => {
+    if (label === '') {
+      yPos += 2;
+      return;
+    }
+    doc.text(label, margin, yPos);
+    doc.text(value, pageWidth - margin, yPos, { align: 'right' });
+    yPos += 6;
+  });
+  
+  // Final price
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.text('FINAL PRICE:', margin, yPos);
+  doc.text(`$${finalPrice.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
+  
+  // Save PDF
+  doc.save('quote.pdf');
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6">
