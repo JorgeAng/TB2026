@@ -19,7 +19,7 @@ const QuoteEditor = () => {
     drafting: 250,
     studSpacing: 16,
     topPlates: 2,
-    extraTopPlates: 1,
+    extraTopPlates: 4,
     roofPitchRise: 4,
     roofPitchRun: 12,
     overhang: 0
@@ -51,10 +51,10 @@ const QuoteEditor = () => {
   const formulas = {
     1: () => Math.ceil((perimeter * 12) / config.studSpacing),
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
-    3: () => Math.ceil(perimeter / 16) * config.extraTopPlates,
+    3: () => config.extraTopPlates,
     4: () => Math.ceil(perimeter / 16),
-    5: () => Math.ceil(Math.ceil(dimensions.height / 2) * (perimeter / 16)),
-    6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2),
+    5: () => Math.ceil(Math.ceil((dimensions.height +1)/ 2) * (perimeter / 16)),
+    6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2* 1.7),
     7: () => 95,
     8: () => Math.ceil(perimeter / 4),
     9: () => Math.ceil(perimeter / 50),
@@ -257,13 +257,13 @@ const QuoteEditor = () => {
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
-            <button
-              onClick={exportQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
-            >
-              <Download className="w-4 h-4" />
-              Export Quote
-            </button>
+              <button
+                onClick={exportQuote}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
+              >
+            <Download className="w-4 h-4" />
+           Export PDF
+          </button>
           </div>
 
           {/* Building Dimensions */}
@@ -416,7 +416,7 @@ const QuoteEditor = () => {
                           value={item.qty}
                           onChange={(e) => updateQty(item.id, e.target.value)}
                           disabled={!item.enabled}
-                          className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100"
+                          className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-center text-black text-sm disabled:bg-slate-100"
                         />
                         <span className="text-slate-500 text-sm">×</span>
                         <span className="text-slate-500 text-sm">$</span>
