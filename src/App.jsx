@@ -264,8 +264,13 @@ const QuoteEditor = () => {
     const data = JSON.parse(saved);
     setDimensions(data.dimensions);
     setConfig(data.config);
-    // Items will retain their manualOverride status from saved data
-    setItems(data.items);
+    // Ensure all items have defaultUnit property
+    const itemsWithDefaults = data.items.map(item => ({
+      ...item,
+      defaultUnit: item.defaultUnit !== undefined ? item.defaultUnit : item.unit,
+      manualPriceOverride: item.manualPriceOverride || false
+    }));
+    setItems(itemsWithDefaults);
   };
 
   // List Saved project
