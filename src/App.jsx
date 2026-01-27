@@ -3,12 +3,7 @@ import { Trash2, Plus, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
 const QuoteEditor = () => {
-  const [dimensions, setDimensions] = useState({
-    width: 0,
-    length: 0,
-    height: 16
-  });
-
+  const [dimensions, setDimensions] = useState({ width: 0, length: 0, height: 16 });
   const [config, setConfig] = useState({
     management: 0.07,
     pst: 0.07,
@@ -26,6 +21,7 @@ const QuoteEditor = () => {
     overhang: 0
   });
 
+  const [projectName, setProjectName] = useState('');
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', qty: 0, unit: 0, category: 'framing' });
   const [showAddForm, setShowAddForm] = useState(false);
@@ -33,19 +29,17 @@ const QuoteEditor = () => {
   // Calculate derived values from dimensions
   const floorArea = (dimensions.width || 0) * (dimensions.length || 0);
   const perimeter = 2 * ((dimensions.width || 0) + (dimensions.length || 0));
-  const wallAreaRect = perimeter * (dimensions.height +1|| 0);
-  
+  const wallAreaRect = perimeter * ((dimensions.height || 0) + 1);
+
   // Calculate gable roof geometry
-  const roofPitch = config.roofPitchRise / config.roofPitchRun; // 4/12 = 0.333...
+  const roofPitch = config.roofPitchRise / config.roofPitchRun;
   const angleRad = Math.atan(roofPitch);
   const cosAngle = Math.cos(angleRad);
   const run = (dimensions.width || 0) / 2;
   const rise = run * roofPitch;
   const rafterLen = (run / cosAngle) + config.overhang;
   const roofArea = rafterLen * (dimensions.length || 0) * 2;
-  
-  // Gable area: 2 triangular ends (base * height / 2) * 2 ends, then multiply by 2
-  const gableArea = (((dimensions.width || 0) * rise / 2) * 2) * 2;
+  const gableArea = (dimensions.width || 0) * rise * 2;
   const wallArea = wallAreaRect;
 
   // Formula definitions for each item
@@ -54,7 +48,7 @@ const QuoteEditor = () => {
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
     3: () => config.extraTopPlates,
     4: () => Math.ceil(perimeter / 16),
-    5: () => Math.ceil(Math.ceil((dimensions.height +1)/ 2) * (perimeter / 16)),
+    5: () => Math.ceil(((dimensions.height || 0) + 1)/2 * (perimeter / 16)),
     6: () => Math.ceil(Math.ceil(rafterLen / 2) * (dimensions.length / 16) * 2* 1.7),
     7: () => 95,
     8: () => Math.ceil(perimeter / 4),
@@ -94,59 +88,59 @@ const QuoteEditor = () => {
   // Initialize items with formulas
   useEffect(() => {
     const initialItems = [
-      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true },
-      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, enabled: true, hasFormula: true },
-      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, enabled: true, hasFormula: true },
-      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, enabled: true, hasFormula: true },
-      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, enabled: true, hasFormula: true },
-      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, enabled: true, hasFormula: true },
-      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, enabled: true, hasFormula: true },
-      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, enabled: true, hasFormula: true },
-      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, enabled: true, hasFormula: true },
-      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, enabled: true, hasFormula: true },
-      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, enabled: true, hasFormula: true },
-      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, enabled: true, hasFormula: false },
-      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, enabled: true, hasFormula: false },
-      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, enabled: true, hasFormula: false },
-      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, enabled: true, hasFormula: true },
-      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, enabled: true, hasFormula: true },
-      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, enabled: true, hasFormula: true },
-      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, enabled: true, hasFormula: true },
-      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, enabled: true, hasFormula: true },
-      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, enabled: true, hasFormula: true },
-      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, enabled: true, hasFormula: true },
-      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, enabled: true, hasFormula: true },
-      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, enabled: true, hasFormula: true },
-      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, enabled: true, hasFormula: true },
-      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, enabled: true, hasFormula: true },
-      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true },
-      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, enabled: true, hasFormula: true },
-      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, enabled: true, hasFormula: true },
-      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, enabled: true, hasFormula: true },
-      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, enabled: true, hasFormula: true },
-      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, enabled: true, hasFormula: true },
-      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true },
-      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, enabled: true, hasFormula: true },
-      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, enabled: true, hasFormula: true },
-      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, enabled: true, hasFormula: false },
-      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, enabled: true, hasFormula: false },
-      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, enabled: true, hasFormula: false },
-      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, enabled: true, hasFormula: true },
-      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, enabled: true, hasFormula: true },
-      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, enabled: true, hasFormula: true },
-      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, enabled: true, hasFormula: true },
-      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, enabled: true, hasFormula: true },
-      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, enabled: true, hasFormula: true },
-      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, enabled: true, hasFormula: true },
-      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, enabled: true, hasFormula: true }
+      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, enabled: true, hasFormula: false, manualOverride: false },
+      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, enabled: true, hasFormula: true, manualOverride: false },
+      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, enabled: true, hasFormula: true, manualOverride: false }
     ];
     setItems(initialItems);
   }, []);
 
-  // Recalculate quantities when dimensions change
+  // Recalculate quantities when dimensions change (only for items without manual override)
   useEffect(() => {
     setItems(prevItems => prevItems.map(item => {
-      if (item.hasFormula && formulas[item.id]) {
+      if (item.hasFormula && formulas[item.id] && !item.manualOverride) {
         return { ...item, qty: formulas[item.id]() };
       }
       return item;
@@ -155,7 +149,11 @@ const QuoteEditor = () => {
 
   const updateQty = (id, newQty) => {
     setItems(items.map(item => 
-      item.id === id ? { ...item, qty: Math.max(0, Number(newQty)) } : item
+      item.id === id ? { 
+        ...item, 
+        qty: Math.max(0, Number(newQty)),
+        manualOverride: true // Mark as manually overridden
+      } : item
     ));
   };
 
@@ -177,13 +175,14 @@ const QuoteEditor = () => {
 
   const addItem = () => {
     if (newItem.name && newItem.qty > 0 && newItem.unit > 0) {
-      setItems([...items, { 
-        id: Math.max(...items.map(i => i.id)) + 1, 
-        ...newItem, 
+      setItems([...items, {
+        id: Math.max(...items.map(i => i.id)) + 1,
+        ...newItem,
         qty: Number(newItem.qty),
         unit: Number(newItem.unit),
         enabled: true,
-        hasFormula: false
+        hasFormula: false,
+        manualOverride: false
       }]);
       setNewItem({ name: '', qty: 0, unit: 0, category: 'framing' });
       setShowAddForm(false);
@@ -192,10 +191,7 @@ const QuoteEditor = () => {
 
   const updateDimension = (field, value) => {
     const numValue = value === '' ? '' : Math.max(0, Number(value));
-    setDimensions(prev => ({
-      ...prev,
-      [field]: numValue
-    }));
+    setDimensions(prev => ({ ...prev, [field]: numValue }));
   };
 
   // Calculate totals
@@ -222,110 +218,147 @@ const QuoteEditor = () => {
     insulation: '🧊 Insulation & Wraps'
   };
 
-  const exportQuote = () => {
-  // Dynamically import jsPDF
-
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  let yPos = 20;
-  
-  // Title
-  doc.setFontSize(18);
-  doc.setFont(undefined, 'bold');
-  doc.text('BUILDING QUOTE ESTIMATE', margin, yPos);
-  yPos += 10;
-  
-  // Building dimensions
-  doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Floor: ${floorArea} sqft | Wall: ${Math.ceil(wallArea)} sqft | Roof: ${Math.ceil(roofArea)} sqft`, margin, yPos);
-  yPos += 10;
-  
-  // Items by category
-  Object.entries(categories).forEach(([key, label]) => {
-    const catItems = items.filter(i => i.category === key && i.enabled);
-    if (catItems.length === 0) return;
-    
-    // Check if we need a new page
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
+  // Save project with manual overrides
+  const saveProject = () => {
+    if (!projectName) {
+      alert('Please enter a project name');
+      return;
     }
-    
+    const projectData = {
+      projectName,
+      dimensions,
+      config,
+      items // This now includes manualOverride flags
+    };
+    localStorage.setItem(`quote_${projectName}`, JSON.stringify(projectData));
+    alert('Project saved');
+  };
+
+  // Load Project
+  const loadProject = () => {
+    if (!projectName) {
+      alert('Enter a project name to load');
+      return;
+    }
+    const saved = localStorage.getItem(`quote_${projectName}`);
+    if (!saved) {
+      alert('Project not found');
+      return;
+    }
+    const data = JSON.parse(saved);
+    setDimensions(data.dimensions);
+    setConfig(data.config);
+    // Items will retain their manualOverride status from saved data
+    setItems(data.items);
+  };
+
+  // List Saved project
+  const savedProjects = Object.keys(localStorage)
+    .filter(key => key.startsWith('quote_'))
+    .map(key => key.replace('quote_', ''));
+
+  // Export Quote
+  const exportQuote = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPos = 20;
+
+    // Title
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
-    doc.text(label, margin, yPos);
-    yPos += 6;
-    
-    doc.setFontSize(9);
+    doc.text(`Project: ${projectName || 'Unnamed Project'}`, margin, yPos);
+    yPos += 8;
+
+    // Building dimensions
+    doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    
-    catItems.forEach(item => {
-      if (yPos > 270) {
+    doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun}`, margin, yPos);
+    yPos += 5;
+    doc.text(`Floor: ${floorArea} sqft | Wall: ${Math.ceil(wallArea)} sqft | Roof: ${Math.ceil(roofArea)} sqft`, margin, yPos);
+    yPos += 10;
+
+    // Items by category
+    Object.entries(categories).forEach(([key, label]) => {
+      const catItems = items.filter(i => i.category === key && i.enabled);
+      if (catItems.length === 0) return;
+
+      if (yPos > 250) {
         doc.addPage();
         yPos = 20;
       }
-      
-      const itemText = `${item.name}`;
-      const qtyText = `${item.qty} × $${item.unit.toFixed(2)}`;
-      const totalText = `$${(item.qty * item.unit).toFixed(2)}`;
-      
-      doc.text(itemText, margin + 2, yPos);
-      doc.text(qtyText, pageWidth - margin - 60, yPos);
-      doc.text(totalText, pageWidth - margin - 30, yPos, { align: 'right' });
-      yPos += 5;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(label, margin, yPos);
+      yPos += 6;
+
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+
+      catItems.forEach(item => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        const itemText = `${item.name}`;
+        const qtyText = `${item.qty} × $${item.unit.toFixed(2)}`;
+        const totalText = `$${(item.qty * item.unit).toFixed(2)}`;
+
+        doc.text(itemText, margin + 2, yPos);
+        doc.text(qtyText, pageWidth - margin - 60, yPos);
+        doc.text(totalText, pageWidth - margin - 30, yPos, { align: 'right' });
+        yPos += 5;
+      });
+
+      yPos += 3;
     });
-    
-    yPos += 3;
-  });
-  
-  // Totals section
-  if (yPos > 200) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  yPos += 5;
-  doc.setFontSize(10);
-  
-  const totals = [
-    ['Materials Total:', `$${materialTotal.toFixed(2)}`],
-    ['Other Items:', `$${otherItems.toFixed(2)}`],
-    ['Management (7%):', `$${management.toFixed(2)}`],
-    ['PST (7%):', `$${pst.toFixed(2)}`],
-    ['Waste (5%):', `$${waste.toFixed(2)}`],
-    ['Profit (25%):', `$${profit.toFixed(2)}`],
-    ['', ''],
-    ['Building Cost (no labor):', `$${buildingWithoutLabor.toFixed(2)}`],
-    ['Labor:', `$${labor.toFixed(2)}`],
-    ['', ''],
-    ['TOTAL QUOTED:', `$${totalQuoted.toFixed(2)}`],
-    ['GST (5%):', `$${gst.toFixed(2)}`],
-    ['', '']
-  ];
-  
-  totals.forEach(([label, value]) => {
-    if (label === '') {
-      yPos += 2;
-      return;
+
+    // Totals section
+    if (yPos > 200) {
+      doc.addPage();
+      yPos = 20;
     }
-    doc.text(label, margin, yPos);
-    doc.text(value, pageWidth - margin, yPos, { align: 'right' });
-    yPos += 6;
-  });
-  
-  // Final price
-  doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
-  doc.text('FINAL PRICE:', margin, yPos);
-  doc.text(`$${finalPrice.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
-  
-  // Save PDF
-  doc.save('quote.pdf');
-};
+
+    yPos += 5;
+    doc.setFontSize(10);
+
+    const totals = [
+      ['Materials Total:', `$${materialTotal.toFixed(2)}`],
+      ['Other Items:', `$${otherItems.toFixed(2)}`],
+      ['Management (7%):', `$${management.toFixed(2)}`],
+      ['PST (7%):', `$${pst.toFixed(2)}`],
+      ['Waste (5%):', `$${waste.toFixed(2)}`],
+      ['Profit (25%):', `$${profit.toFixed(2)}`],
+      ['', ''],
+      ['Building Cost (no labor):', `$${buildingWithoutLabor.toFixed(2)}`],
+      ['Labor:', `$${labor.toFixed(2)}`],
+      ['', ''],
+      ['TOTAL QUOTED:', `$${totalQuoted.toFixed(2)}`],
+      ['GST (5%):', `$${gst.toFixed(2)}`],
+      ['', '']
+    ];
+
+    totals.forEach(([label, value]) => {
+      if (label === '') {
+        yPos += 2;
+        return;
+      }
+      doc.text(label, margin, yPos);
+      doc.text(value, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+    });
+
+    // Final price
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('FINAL PRICE:', margin, yPos);
+    doc.text(`$${finalPrice.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
+
+    const safeProjectName = projectName ? projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'quote';
+    doc.save(`${safeProjectName}.pdf`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-24">
@@ -333,14 +366,40 @@ const QuoteEditor = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Interactive Quote Editor</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Timbilt Quote Editor</h1>
+              <div className="flex gap-2">
                 <button
-                  onClick={exportQuote}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
+                  onClick={saveProject}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-              <Download className="w-4 h-4" />
-             Export PDF
-            </button>
+                  Save Project
+                </button>
+                <button
+                  onClick={loadProject}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Load Project
+                </button>
+              </div>
+            </div>
+
+            <div className="relative w-full sm:w-96 mb-6">
+              <input
+                type="text"
+                list="saved-projects"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="Project name (e.g. Smith Shop 40x50)"
+                className="w-full px-4 py-2 text-black font-semibold border-2 border-slate-300 rounded-lg"
+              />
+              <datalist id="saved-projects">
+                {savedProjects.map(name => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+              <div className="text-xs text-slate-500 mt-1">
+                Type a new name or select an existing project
+              </div>
             </div>
 
             {/* Building Dimensions */}
@@ -375,7 +434,7 @@ const QuoteEditor = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-indigo-700 mb-2">Roof Pitch (Rise/Run)</label>
@@ -408,7 +467,7 @@ const QuoteEditor = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-sm">
                 <div className="bg-white/60 p-2 rounded">
                   <div className="text-indigo-600 font-medium text-xs sm:text-sm">Floor Area</div>
@@ -485,7 +544,12 @@ const QuoteEditor = () => {
                             onChange={() => toggleItem(item.id)}
                             className="w-4 h-4 text-blue-600 rounded flex-shrink-0"
                           />
-                          <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base">{item.name}</div>
+                          <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base">
+                            {item.name}
+                            {item.manualOverride && (
+                              <span className="ml-2 text-xs text-amber-600" title="Manually adjusted">✏️</span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto ml-6 sm:ml-0">
                           <input
