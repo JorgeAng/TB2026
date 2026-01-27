@@ -88,51 +88,51 @@ const QuoteEditor = () => {
   // Initialize items with formulas
   useEffect(() => {
     const initialItems = [
-      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, enabled: true, hasFormula: false, manualOverride: false },
-      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, enabled: true, hasFormula: true, manualOverride: false },
-      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, enabled: true, hasFormula: true, manualOverride: false }
+      { id: 1, category: 'framing', name: '2x6 Studs 16\'', qty: 135, unit: 18.19, defaultUnit: 18.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 2, category: 'framing', name: 'Top Plates', qty: 27, unit: 6.03, defaultUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 3, category: 'framing', name: 'Extra Top Plates', qty: 14, unit: 6.03, defaultUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 4, category: 'framing', name: 'Bottom Plates (PWF)', qty: 11, unit: 36.18, defaultUnit: 36.18, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 5, category: 'framing', name: 'Wall Strapping', qty: 90, unit: 9.88, defaultUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 6, category: 'framing', name: 'Roof Strapping', qty: 122, unit: 9.88, defaultUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 7, category: 'framing', name: 'Headers (LF)', qty: 95, unit: 7.10, defaultUnit: 7.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 8, category: 'framing', name: 'Anchor Bolts', qty: 45, unit: 2.23, defaultUnit: 2.23, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 9, category: 'framing', name: 'Sill Gasket', qty: 2, unit: 15.29, defaultUnit: 15.29, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 10, category: 'framing', name: 'Paslode Nails 2⅜"', qty: 2, unit: 6.73, defaultUnit: 6.73, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 11, category: 'framing', name: 'Paslode Nails 3¼"', qty: 3, unit: 75.50, defaultUnit: 75.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 12, category: 'openings', name: 'Windows', qty: 2, unit: 560.70, defaultUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 13, category: 'openings', name: 'Steel Man Doors', qty: 1, unit: 693.00, defaultUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 14, category: 'openings', name: 'Door Handles', qty: 1, unit: 89.99, defaultUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 15, category: 'exterior', name: '28GA Roof Metal (sqft)', qty: 2199, unit: 1.21, defaultUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 16, category: 'exterior', name: '28GA Wall Metal (sqft)', qty: 3593, unit: 1.21, defaultUnit: 1.21, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 17, category: 'exterior', name: 'Ridge Caps', qty: 5, unit: 28.86, defaultUnit: 28.86, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 18, category: 'exterior', name: 'Inside Corners', qty: 24, unit: 11.62, defaultUnit: 11.62, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 19, category: 'exterior', name: 'Outside Corners', qty: 4, unit: 24.42, defaultUnit: 24.42, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 20, category: 'exterior', name: 'Gable Flashings', qty: 4, unit: 35.97, defaultUnit: 35.97, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 21, category: 'exterior', name: 'Drip Edges', qty: 3, unit: 8.77, defaultUnit: 8.77, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 22, category: 'exterior', name: 'Base Flashings', qty: 17, unit: 9.38, defaultUnit: 9.38, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 23, category: 'exterior', name: 'Door Jambs 11.25"', qty: 5, unit: 35.07, defaultUnit: 35.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 24, category: 'exterior', name: 'Flat Stock', qty: 17, unit: 18.00, defaultUnit: 18.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 25, category: 'exterior', name: 'Eave Flashings', qty: 14, unit: 18.28, defaultUnit: 18.28, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 26, category: 'exterior', name: 'J Channels', qty: 10, unit: 9.66, defaultUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 27, category: 'exterior', name: 'Ridge Flex-O-Vent', qty: 5, unit: 21.64, defaultUnit: 21.64, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 28, category: 'exterior', name: 'Foam Closures', qty: 32, unit: 1.60, defaultUnit: 1.60, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 29, category: 'exterior', name: 'Metal Screws (boxes)', qty: 6, unit: 0.10, defaultUnit: 0.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 30, category: 'interior', name: 'Interior Wall Metal (sqft)', qty: 2880, unit: 1.17, defaultUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 31, category: 'interior', name: 'Interior Ceiling Metal (sqft)', qty: 2000, unit: 1.17, defaultUnit: 1.17, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 32, category: 'interior', name: 'Interior J Channels', qty: 10, unit: 9.66, defaultUnit: 9.66, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 33, category: 'interior', name: 'Interior Corners', qty: 16, unit: 27.07, defaultUnit: 27.07, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 34, category: 'interior', name: 'Interior Screws (boxes)', qty: 5, unit: 0.08, defaultUnit: 0.08, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 35, category: 'interior', name: 'O/H Door Flatstock', qty: 2, unit: 46.20, defaultUnit: 46.20, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 36, category: 'interior', name: 'Header Trim', qty: 2, unit: 33.39, defaultUnit: 33.39, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 37, category: 'interior', name: 'Window/Door Trims 4x8', qty: 1, unit: 112.12, defaultUnit: 112.12, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 38, category: 'insulation', name: 'House Wrap (rolls)', qty: 4, unit: 111.71, defaultUnit: 111.71, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 39, category: 'insulation', name: 'Poly Vapor Barrier (rolls)', qty: 3, unit: 123.19, defaultUnit: 123.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 40, category: 'insulation', name: 'Staples (packages)', qty: 4, unit: 11.87, defaultUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 41, category: 'insulation', name: 'Tuck Tape (rolls)', qty: 2, unit: 13.15, defaultUnit: 13.15, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 42, category: 'insulation', name: 'Acu Seal (tubes)', qty: 6, unit: 14.09, defaultUnit: 14.09, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 43, category: 'insulation', name: 'R20 Wall Insulation (sqft)', qty: 2880, unit: 0.65, defaultUnit: 0.65, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 44, category: 'insulation', name: 'R50 Ceiling Insulation (sqft)', qty: 2000, unit: 1.50, defaultUnit: 1.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 45, category: 'insulation', name: 'Attic Hatch', qty: 1, unit: 220.00, defaultUnit: 220.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false }
     ];
     setItems(initialItems);
   }, []);
@@ -159,7 +159,21 @@ const QuoteEditor = () => {
 
   const updateUnit = (id, newUnit) => {
     setItems(items.map(item => 
-      item.id === id ? { ...item, unit: Math.max(0, Number(newUnit)) } : item
+      item.id === id ? { 
+        ...item, 
+        unit: Math.max(0, Number(newUnit)),
+        manualPriceOverride: Number(newUnit) !== item.defaultUnit
+      } : item
+    ));
+  };
+
+  const lockPriceUpdate = (id) => {
+    setItems(items.map(item => 
+      item.id === id ? { 
+        ...item, 
+        defaultUnit: item.unit,
+        manualPriceOverride: false
+      } : item
     ));
   };
 
@@ -180,9 +194,11 @@ const QuoteEditor = () => {
         ...newItem,
         qty: Number(newItem.qty),
         unit: Number(newItem.unit),
+        defaultUnit: Number(newItem.unit),
         enabled: true,
         hasFormula: false,
-        manualOverride: false
+        manualOverride: false,
+        manualPriceOverride: false
       }]);
       setNewItem({ name: '', qty: 0, unit: 0, category: 'framing' });
       setShowAddForm(false);
@@ -531,55 +547,60 @@ const QuoteEditor = () => {
                     {categoryItems.map(item => (
                       <div
                         key={item.id}
-                        className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-lg border transition-all ${
+                        className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
                           item.enabled 
                             ? 'bg-white border-slate-200 hover:border-slate-300' 
                             : 'bg-slate-50 border-slate-100 opacity-50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1">
-                          <input
-                            type="checkbox"
-                            checked={item.enabled}
-                            onChange={() => toggleItem(item.id)}
-                            className="w-4 h-4 text-blue-600 rounded flex-shrink-0"
-                          />
-                          <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base">
-                            {item.name}
-                            {item.manualOverride && (
-                              <span className="ml-2 text-xs text-amber-600" title="Manually adjusted">✏️</span>
-                            )}
-                          </div>
+                        <input
+                          type="checkbox"
+                          checked={item.enabled}
+                          onChange={() => toggleItem(item.id)}
+                          className="w-4 h-4 text-blue-600 rounded flex-shrink-0"
+                        />
+                        <div className="flex-1 font-medium text-slate-700 text-sm sm:text-base min-w-0">
+                          {item.name}
+                          {item.manualOverride && (
+                            <span className="ml-2 text-xs text-amber-600" title="Manually adjusted quantity">✏️</span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto ml-6 sm:ml-0">
-                          <input
-                            type="number"
-                            value={item.qty}
-                            onChange={(e) => updateQty(item.id, e.target.value)}
-                            disabled={!item.enabled}
-                            className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-center text-black text-sm disabled:bg-slate-100"
-                          />
-                          <span className="text-slate-500 text-sm">×</span>
-                          <span className="text-slate-500 text-sm">$</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={item.unit}
-                            onChange={(e) => updateUnit(item.id, e.target.value)}
-                            disabled={!item.enabled}
-                            className="w-20 sm:w-24 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100"
-                          />
-                          <span className="text-slate-500 text-sm">=</span>
-                          <div className="w-24 sm:w-28 text-right font-semibold text-slate-800 text-sm sm:text-base">
-                            ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 2})}
-                          </div>
+                        {item.manualPriceOverride && (
                           <button
-                            onClick={() => removeItem(item.id)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                            onClick={() => lockPriceUpdate(item.id)}
+                            className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex-shrink-0 whitespace-nowrap"
+                            title="Lock this price as the new default"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            Update Price
                           </button>
+                        )}
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => updateQty(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-20 sm:w-28 px-2 py-1 border border-slate-300 rounded text-center text-black text-sm disabled:bg-slate-100 flex-shrink-0"
+                        />
+                        <span className="text-slate-500 text-sm flex-shrink-0">×</span>
+                        <span className="text-slate-500 text-sm flex-shrink-0">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unit}
+                          onChange={(e) => updateUnit(item.id, e.target.value)}
+                          disabled={!item.enabled}
+                          className="w-20 sm:w-24 px-2 py-1 border border-slate-300 rounded text-right text-black text-sm disabled:bg-slate-100 flex-shrink-0"
+                        />
+                        <span className="text-slate-500 text-sm flex-shrink-0">=</span>
+                        <div className="w-24 sm:w-28 text-right font-semibold text-slate-800 text-sm sm:text-base flex-shrink-0">
+                          ${(item.qty * item.unit).toLocaleString('en-US', {minimumFractionDigits: 2})}
                         </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
