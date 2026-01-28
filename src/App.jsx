@@ -11,8 +11,8 @@ const QuoteEditor = () => {
     profit: 0.25,
     gst: 0.05,
     laborPerSqft: 10,
-    toolExpense: 2000,
-    drafting: 250,
+    toolExpense: 1,
+    drafting: 1,
     studSpacing: 16,
     topPlates: 2,
     extraTopPlates: 4,
@@ -69,8 +69,8 @@ const QuoteEditor = () => {
     14: () => 0, // Exterior Metal Screws - calculated inline
     15: () => 0, // Interior Metal Screws - calculated inline
     16: () => Math.ceil(perimeter / 50),
-    17: () => 0, // Windows - manual entry
-    18: () => 0, // Steel Man Door - manual entry
+    17: () => 2, // Windows - manual entry
+    18: () => 1, // Steel Man Door - manual entry
     19: () => 1, // Door Handle - manual entry
     20: () => Math.ceil(roofArea),
     21: () => Math.ceil(wallAreaRect + gableArea),
@@ -142,7 +142,7 @@ const QuoteEditor = () => {
       { id: 5, category: 'framing_lumber', name: 'Headers', qty: 95, unit: getPrice(5, 7.10), baseUnit: 7.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 6, category: 'framing_lumber', name: 'LVL Header Material', qty: 0, unit: getPrice(6, 50.00), baseUnit: 50.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       { id: 7, category: 'framing_lumber', name: 'Outside Wall Strapping', qty: 90, unit: getPrice(7, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 8, category: 'framing_lumber', name: 'Inside Wall Strapping', qty: 90, unit: getPrice(8, 9.88), baseUnit: 9.88, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 8, category: 'framing_lumber', name: 'Inside Wall Strapping', qty: 90, unit: getPrice(8, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 9, category: 'framing_lumber', name: 'Roof Strapping', qty: 122, unit: getPrice(9, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 10, category: 'framing_lumber', name: '3/4" Plywood (bi-fold)', qty: 0, unit: getPrice(10, 85.00), baseUnit: 85.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       
@@ -155,8 +155,8 @@ const QuoteEditor = () => {
       { id: 16, category: 'fasteners', name: 'Staples', qty: 4, unit: getPrice(16, 11.87), baseUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       
       // Windows & Doors (Exterior)
-      { id: 17, category: 'windows_doors', name: 'Windows', qty: 0, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
-      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 0, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
+      { id: 17, category: 'windows_doors', name: 'Windows', qty: 2, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
+      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 1, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
       { id: 19, category: 'windows_doors', name: 'Door Handle', qty: 1, unit: getPrice(19, 89.99), baseUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       
       // Exterior Metal – Roofing & Walls
@@ -229,8 +229,8 @@ const QuoteEditor = () => {
       { id: 70, category: 'trades', name: 'Door Paint', qty: 1, unit: getPrice(70, 300.00), baseUnit: 300.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       { id: 71, category: 'trades', name: 'Tool Expenses', qty: 1, unit: getPrice(71, 2000.00), baseUnit: 2000.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 72, category: 'trades', name: 'Trusses Package', qty: 1, unit: getPrice(72, 8000.00), baseUnit: 8000.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 73, category: 'trades', name: 'Bifold Door', qty: 0, unit: getPrice(73, 12000.00), baseUnit: 12000.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
-      { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 }
+      { id: 73, category: 'trades', name: 'Bifold Door', qty: 0, unit: getPrice(73, 12000.00), baseUnit: 1200.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
+      { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 }
     ];
     setItems(initialItems);
   }, [defaultPrices]);
@@ -253,11 +253,11 @@ const QuoteEditor = () => {
           }
           // Exterior Metal Screws (id: 14)
           if (item.id === 14) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) ) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 1.5 / 1000) };
           }
           // Interior Metal Screws (id: 15)
           if (item.id === 15) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9 * 1.5 / 1000) };
           }
           // All other formulas
           if (formulas[item.id]) {
@@ -292,27 +292,32 @@ const QuoteEditor = () => {
     setItems(prevItems => {
       const updatedItems = prevItems.map(item => {
         if (item.id === id) {
-          // Calculate total perimeter based on item type
+          // Calculate total perimeter and quantity based on item type
           let totalPerimeter = 0;
+          let totalQty = 0;
           const isWindow = item.name.toLowerCase().includes('window');
           
           newSizes.forEach(size => {
             const w = Number(size.width) || 0;
             const h = Number(size.height) || 0;
+            const qty = Number(size.qty) || 1;
+            
             if (isWindow) {
               // Windows: 4 sides (full perimeter)
-              totalPerimeter += 2 * (w + h);
+              totalPerimeter += 2 * (w + h) * qty;
             } else {
               // Doors: 3 sides (no bottom)
-              totalPerimeter += w + 2 * h;
+              totalPerimeter += (w + 2 * h) * qty;
             }
+            
+            totalQty += qty;
           });
           
           return {
             ...item,
             sizes: newSizes,
             totalPerimeter: totalPerimeter,
-            qty: newSizes.length // Update quantity to match number of sizes
+            qty: totalQty // Update quantity to match total of all quantities
           };
         }
         return item;
@@ -334,11 +339,11 @@ const QuoteEditor = () => {
           }
           // Recalculate Exterior Metal Screws (id: 14)
           if (item.id === 14) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 1.5 / 1000) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea)) };
           }
           // Recalculate Interior Metal Screws (id: 15)
           if (item.id === 15) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9 * 1.5 / 1000) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9) };
           }
         }
         return item;
@@ -445,10 +450,10 @@ const QuoteEditor = () => {
 
   // Size Modal Component
   const SizeModal = ({ item, onClose, onSave }) => {
-    const [tempSizes, setTempSizes] = useState(item.sizes || [{width: 0, height: 0}]);
+    const [tempSizes, setTempSizes] = useState(item.sizes || [{width: 0, height: 0, qty: 1}]);
     
     const addSize = () => {
-      setTempSizes([...tempSizes, {width: 0, height: 0}]);
+      setTempSizes([...tempSizes, {width: 0, height: 0, qty: 1}]);
     };
     
     const removeSize = (index) => {
@@ -457,7 +462,7 @@ const QuoteEditor = () => {
     
     const updateSize = (index, field, value) => {
       const newSizes = [...tempSizes];
-      newSizes[index][field] = Math.max(0, Number(value) || 0);
+      newSizes[index][field] = Math.max(field === 'qty' ? 1 : 0, Number(value) || (field === 'qty' ? 1 : 0));
       setTempSizes(newSizes);
     };
     
@@ -468,9 +473,20 @@ const QuoteEditor = () => {
     
     const isWindow = item.name.toLowerCase().includes('window');
     
+    const getTotalQty = () => {
+      return tempSizes.reduce((sum, size) => sum + (size.qty || 1), 0);
+    };
+    
+    const getTotalPerimeter = () => {
+      return tempSizes.reduce((sum, size) => {
+        const perimeter = isWindow ? 2 * (size.width + size.height) : size.width + 2 * size.height;
+        return sum + perimeter * (size.qty || 1);
+      }, 0);
+    };
+    
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-auto">
           <div className="p-6">
             <h3 className="text-xl font-bold text-slate-800 mb-4">
               {item.name} - Size Configuration
@@ -483,12 +499,12 @@ const QuoteEditor = () => {
               {tempSizes.map((size, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                   <span className="text-sm font-medium text-slate-700 w-12">#{index + 1}</span>
-                  <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="flex-1 grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">Width (ft)</label>
                       <input
                         type="number"
-                        step="1"
+                        step="0.1"
                         value={size.width}
                         onChange={(e) => updateSize(index, 'width', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded text-black"
@@ -498,17 +514,34 @@ const QuoteEditor = () => {
                       <label className="block text-xs font-medium text-slate-600 mb-1">Height (ft)</label>
                       <input
                         type="number"
-                        step="1"
+                        step="0.1"
                         value={size.height}
                         onChange={(e) => updateSize(index, 'height', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded text-black"
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Quantity</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={size.qty || 1}
+                        onChange={(e) => updateSize(index, 'qty', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded text-black"
+                      />
+                    </div>
                   </div>
-                  <div className="text-sm text-slate-700 w-24 text-right">
-                    {isWindow 
-                      ? (2 * (size.width + size.height)).toFixed(1)
-                      : (size.width + 2 * size.height).toFixed(1)} ft
+                  <div className="text-sm text-slate-700 w-32 text-right">
+                    <div className="font-medium">
+                      {(isWindow 
+                        ? (2 * (size.width + size.height))
+                        : (size.width + 2 * size.height)).toFixed(1)} ft
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      × {size.qty || 1} = {(isWindow 
+                        ? (2 * (size.width + size.height) * (size.qty || 1))
+                        : ((size.width + 2 * size.height) * (size.qty || 1))).toFixed(1)} ft
+                    </div>
                   </div>
                   <button
                     onClick={() => removeSize(index)}
@@ -531,9 +564,7 @@ const QuoteEditor = () => {
             <div className="bg-indigo-50 p-4 rounded-lg mb-6">
               <div className="text-sm font-medium text-indigo-900 mb-1">Summary</div>
               <div className="text-xs text-indigo-700">
-                Total Quantity: {tempSizes.length} | Total Perimeter: {tempSizes.reduce((sum, size) => {
-                  return sum + (isWindow ? 2 * (size.width + size.height) : size.width + 2 * size.height);
-                }, 0).toFixed(1)} ft
+                Total Quantity: {getTotalQty()} | Total Perimeter: {getTotalPerimeter().toFixed(1)} ft
               </div>
             </div>
             
@@ -595,7 +626,10 @@ const QuoteEditor = () => {
       ...item,
       baseUnit: item.baseUnit || item.unit, // backward compatibility
       manualPriceOverride: false, // reset price override flag
-      sizes: item.sizes || (item.hasSizing ? [{width: 0, height: 0}] : undefined), // ensure sizes exist
+      sizes: item.sizes ? item.sizes.map(size => ({
+        ...size,
+        qty: size.qty || 1 // ensure qty exists for backward compatibility
+      })) : (item.hasSizing ? [{width: 0, height: 0, qty: 1}] : undefined), // ensure sizes exist
       totalPerimeter: item.totalPerimeter || 0 // ensure perimeter exists
     })));
   };
