@@ -253,11 +253,11 @@ const QuoteEditor = () => {
           }
           // Exterior Metal Screws (id: 14)
           if (item.id === 14) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 1.5 / 1000) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea)) };
           }
           // Interior Metal Screws (id: 15)
           if (item.id === 15) {
-            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9 * 1.5 / 1000) };
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9) };
           }
           // All other formulas
           if (formulas[item.id]) {
