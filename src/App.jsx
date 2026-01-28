@@ -57,7 +57,7 @@ const QuoteEditor = () => {
     2: () => Math.ceil(perimeter / 16) * config.topPlates,
     3: () => config.extraTopPlates,
     4: () => Math.ceil(perimeter / 16),
-    5: () => 95,
+    5: () => 0, // Headers - calculated inline based on opening perimeters
     6: () => 0, // LVL Header Material - manual entry
     7: () => Math.ceil(((dimensions.height || 0) + 1)/2 * (perimeter / 16)),
     8: () => Math.ceil(((dimensions.height || 0) + 1)/2 * (perimeter / 16)),
@@ -66,11 +66,11 @@ const QuoteEditor = () => {
     11: () => Math.ceil(perimeter / 4),
     12: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 30) / 2000),
     13: () => Math.ceil((Math.ceil((perimeter * 12) / config.studSpacing) * 35) / 2000),
-    14: () => Math.ceil((Math.ceil(roofArea) + Math.ceil(wallAreaRect + gableArea)) * 1.5 / 1000),
-    15: () => Math.ceil((Math.ceil(wallAreaRect * 0.94) + Math.ceil(floorArea)) * 1.5 / 1000),
+    14: () => 0, // Exterior Metal Screws - calculated inline
+    15: () => 0, // Interior Metal Screws - calculated inline
     16: () => Math.ceil(perimeter / 50),
-    17: () => 2, // Windows - manual entry
-    18: () => 1, // Steel Man Door - manual entry
+    17: () => 0, // Windows - manual entry
+    18: () => 0, // Steel Man Door - manual entry
     19: () => 1, // Door Handle - manual entry
     20: () => Math.ceil(roofArea),
     21: () => Math.ceil(wallAreaRect + gableArea),
@@ -125,8 +125,8 @@ const QuoteEditor = () => {
     70: () => 1, // Door Paint - manual entry
     71: () => 1, // Tool Expenses
     72: () => 1, // Trusses Package - manual entry
-    73: () => 1, // Bifold Door - manual entry
-    74: () => 1  // Overhead Door - manual entry
+    73: () => 0, // Bifold Door - manual entry
+    74: () => 0  // Overhead Door - manual entry
   };
 
   // Initialize items with formulas
@@ -155,8 +155,8 @@ const QuoteEditor = () => {
       { id: 16, category: 'fasteners', name: 'Staples', qty: 4, unit: getPrice(16, 11.87), baseUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       
       // Windows & Doors (Exterior)
-      { id: 17, category: 'windows_doors', name: 'Windows', qty: 2, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
-      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 1, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
+      { id: 17, category: 'windows_doors', name: 'Windows', qty: 0, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
+      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 0, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
       { id: 19, category: 'windows_doors', name: 'Door Handle', qty: 1, unit: getPrice(19, 89.99), baseUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       
       // Exterior Metal – Roofing & Walls
@@ -217,19 +217,19 @@ const QuoteEditor = () => {
       { id: 60, category: 'kokiak', name: 'Multi Corner', qty: 16, unit: getPrice(60, 30.00), baseUnit: 30.00, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       
       // Trades & Quoted Items
-      { id: 61, category: 'trades', name: 'Permits', qty: 0, unit: getPrice(61, 500.00), baseUnit: 500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 62, category: 'trades', name: 'Engineering', qty: 0, unit: getPrice(62, 1500.00), baseUnit: 1500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 61, category: 'trades', name: 'Permits', qty: 1, unit: getPrice(61, 500.00), baseUnit: 500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 62, category: 'trades', name: 'Engineering', qty: 1, unit: getPrice(62, 1500.00), baseUnit: 1500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       { id: 63, category: 'trades', name: 'Drafting', qty: 1, unit: getPrice(63, 250.00), baseUnit: 250.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 64, category: 'trades', name: 'Electrical', qty: 0, unit: getPrice(64, 5000.00), baseUnit: 5000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 65, category: 'trades', name: 'Plumbing', qty: 0, unit: getPrice(65, 3000.00), baseUnit: 3000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 66, category: 'trades', name: 'Water Hookup', qty: 0, unit: getPrice(66, 2000.00), baseUnit: 2000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 67, category: 'trades', name: 'Septic Tank', qty: 0, unit: getPrice(67, 8000.00), baseUnit: 8000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 68, category: 'trades', name: 'Gravel', qty: 0, unit: getPrice(68, 1500.00), baseUnit: 1500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 69, category: 'trades', name: 'Concrete Floor', qty: 2000, unit: getPrice(69, 3.50), baseUnit: 3.50, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 70, category: 'trades', name: 'Door Paint', qty: 0, unit: getPrice(70, 300.00), baseUnit: 300.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 64, category: 'trades', name: 'Electrical', qty: 1, unit: getPrice(64, 5000.00), baseUnit: 5000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 65, category: 'trades', name: 'Plumbing', qty: 1, unit: getPrice(65, 3000.00), baseUnit: 3000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 66, category: 'trades', name: 'Water Hookup', qty: 1, unit: getPrice(66, 2000.00), baseUnit: 2000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 67, category: 'trades', name: 'Septic Tank', qty: 1, unit: getPrice(67, 8000.00), baseUnit: 8000.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 68, category: 'trades', name: 'Gravel', qty: 1, unit: getPrice(68, 1500.00), baseUnit: 1500.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
+      { id: 69, category: 'trades', name: 'Concrete Floor', qty: 1, unit: getPrice(69, 3.50), baseUnit: 3.50, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 70, category: 'trades', name: 'Door Paint', qty: 1, unit: getPrice(70, 300.00), baseUnit: 300.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       { id: 71, category: 'trades', name: 'Tool Expenses', qty: 1, unit: getPrice(71, 2000.00), baseUnit: 2000.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 72, category: 'trades', name: 'Trusses Package', qty: 1, unit: getPrice(72, 8000.00), baseUnit: 8000.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 73, category: 'trades', name: 'Bifold Door', qty: 0, unit: getPrice(73, 12000.00), baseUnit: 1200.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
+      { id: 73, category: 'trades', name: 'Bifold Door', qty: 0, unit: getPrice(73, 12000.00), baseUnit: 12000.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 },
       { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0}], totalPerimeter: 0 }
     ];
     setItems(initialItems);
@@ -237,13 +237,46 @@ const QuoteEditor = () => {
 
   // Recalculate quantities when dimensions change (only for items without manual override)
   useEffect(() => {
+    setItems(prevItems => {
+      // Helper function to get total openings perimeter
+      const getTotalOpeningsPerimeter = () => {
+        return prevItems
+          .filter(item => item.hasSizing && item.enabled)
+          .reduce((sum, item) => sum + (item.totalPerimeter || 0), 0);
+      };
+      
+      return prevItems.map(item => {
+        if (item.hasFormula && !item.manualOverride) {
+          // Headers (id: 5) - based on total openings perimeter
+          if (item.id === 5) {
+            return { ...item, qty: Math.ceil(getTotalOpeningsPerimeter() / 16) };
+          }
+          // Exterior Metal Screws (id: 14)
+          if (item.id === 14) {
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) ) };
+          }
+          // Interior Metal Screws (id: 15)
+          if (item.id === 15) {
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9) };
+          }
+          // All other formulas
+          if (formulas[item.id]) {
+            return { ...item, qty: formulas[item.id]() };
+          }
+        }
+        return item;
+      });
+    });
+  }, [dimensions, config.studSpacing]);
+
+  const recalculateFormulas = () => {
     setItems(prevItems => prevItems.map(item => {
       if (item.hasFormula && formulas[item.id] && !item.manualOverride) {
         return { ...item, qty: formulas[item.id]() };
       }
       return item;
     }));
-  }, [dimensions, config.studSpacing]);
+  };
 
   const updateQty = (id, newQty) => {
     setItems(items.map(item => 
@@ -256,33 +289,61 @@ const QuoteEditor = () => {
   };
 
   const updateItemSizes = (id, newSizes) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        // Calculate total perimeter based on item type
-        let totalPerimeter = 0;
-        const isWindow = item.name.toLowerCase().includes('window');
-        
-        newSizes.forEach(size => {
-          const w = Number(size.width) || 0;
-          const h = Number(size.height) || 0;
-          if (isWindow) {
-            // Windows: 4 sides (full perimeter)
-            totalPerimeter += 2 * (w + h);
-          } else {
-            // Doors: 3 sides (no bottom)
-            totalPerimeter += w + 2 * h;
+    setItems(prevItems => {
+      const updatedItems = prevItems.map(item => {
+        if (item.id === id) {
+          // Calculate total perimeter based on item type
+          let totalPerimeter = 0;
+          const isWindow = item.name.toLowerCase().includes('window');
+          
+          newSizes.forEach(size => {
+            const w = Number(size.width) || 0;
+            const h = Number(size.height) || 0;
+            if (isWindow) {
+              // Windows: 4 sides (full perimeter)
+              totalPerimeter += 2 * (w + h);
+            } else {
+              // Doors: 3 sides (no bottom)
+              totalPerimeter += w + 2 * h;
+            }
+          });
+          
+          return {
+            ...item,
+            sizes: newSizes,
+            totalPerimeter: totalPerimeter,
+            qty: newSizes.length // Update quantity to match number of sizes
+          };
+        }
+        return item;
+      });
+      
+      // Helper function to get total openings perimeter from updated items
+      const getTotalOpeningsPerimeter = (itemsList) => {
+        return itemsList
+          .filter(item => item.hasSizing && item.enabled)
+          .reduce((sum, item) => sum + (item.totalPerimeter || 0), 0);
+      };
+      
+      // Recalculate formulas that depend on opening perimeters (like Headers)
+      return updatedItems.map(item => {
+        if (item.hasFormula && !item.manualOverride) {
+          // Recalculate Headers (id: 5) based on total openings perimeter
+          if (item.id === 5) {
+            return { ...item, qty: Math.ceil(getTotalOpeningsPerimeter(updatedItems) / 16) };
           }
-        });
-        
-        return {
-          ...item,
-          sizes: newSizes,
-          totalPerimeter: totalPerimeter,
-          qty: newSizes.length // Update quantity to match number of sizes
-        };
-      }
-      return item;
-    }));
+          // Recalculate Exterior Metal Screws (id: 14)
+          if (item.id === 14) {
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 1.5 / 1000) };
+          }
+          // Recalculate Interior Metal Screws (id: 15)
+          if (item.id === 15) {
+            return { ...item, qty: Math.ceil((wallArea + roofArea + gableArea) * 0.9 * 1.5 / 1000) };
+          }
+        }
+        return item;
+      });
+    });
   };
 
   const updateUnit = (id, newUnit) => {
@@ -427,7 +488,7 @@ const QuoteEditor = () => {
                       <label className="block text-xs font-medium text-slate-600 mb-1">Width (ft)</label>
                       <input
                         type="number"
-                        step="0.1"
+                        step="1"
                         value={size.width}
                         onChange={(e) => updateSize(index, 'width', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded text-black"
@@ -437,7 +498,7 @@ const QuoteEditor = () => {
                       <label className="block text-xs font-medium text-slate-600 mb-1">Height (ft)</label>
                       <input
                         type="number"
-                        step="0.1"
+                        step="1"
                         value={size.height}
                         onChange={(e) => updateSize(index, 'height', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded text-black"
