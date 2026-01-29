@@ -222,8 +222,8 @@ const QuoteEditor = () => {
       { id: 45, category: 'insulation', name: 'Poly', qty: 3, unit: getPrice(45, 123.19), baseUnit: 123.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 46, category: 'insulation', name: 'Tuck Tape', qty: 2, unit: getPrice(46, 13.15), baseUnit: 13.15, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 47, category: 'insulation', name: 'Acu Seal', qty: 6, unit: getPrice(47, 14.09), baseUnit: 14.09, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 48, category: 'insulation', name: 'R28 Insulation', qty: 2016, unit: getPrice(48, 0.75), baseUnit: 0.75, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 49, category: 'insulation', name: 'R20 Insulation', qty: 864, unit: getPrice(49, 0.65), baseUnit: 0.65, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 48, category: 'insulation', name: 'R28 Insulation', qty: 2016, unit: getPrice(48, 2.38), baseUnit: 2.38, enabled: false, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 49, category: 'insulation', name: 'R20 Insulation', qty: 864, unit: getPrice(49, 0.75), baseUnit: 0.75, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 50, category: 'insulation', name: 'R50 Blow-In Insulation', qty: 2000, unit: getPrice(50, 1.50), baseUnit: 1.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       
       // Drywall & Fire Protection
