@@ -100,8 +100,8 @@ const QuoteEditor = () => {
     45: () => Math.ceil(Math.ceil(wallAreaRect * 0.94) / 1000),
     46: () => 2,
     47: () => 6,
-    48: () => Math.ceil(wallAreaRect * 0.94 * 0.7), // R28 - assume 70% of wall
-    49: () => Math.ceil(wallAreaRect * 0.94 * 0.3), // R20 - assume 30% of wall
+    48: () => Math.ceil(wallAreaRect * 0.94), // R28 - assume 70% of wall
+    49: () => Math.ceil(wallAreaRect * 0.94), // R20 - assume 30% of wall
     50: () => Math.ceil(floorArea), // R50 Blow-In
     51: () => Math.ceil(floorArea), // 1/2" Drywall
     52: () => Math.ceil(wallAreaRect * 0.1), // Fireguard - assume 10% of wall
@@ -125,7 +125,7 @@ const QuoteEditor = () => {
     70: () => 1, // Door Paint - manual entry
     71: () => 1, // Tool Expenses
     72: () => 1, // Trusses Package - manual entry
-    73: () => 0, // Bifold Door - manual entry
+    73: () => 1, // Bifold Door - manual entry
     74: () => 0  // Overhead Door - manual entry
   };
 
@@ -229,7 +229,7 @@ const QuoteEditor = () => {
       { id: 70, category: 'trades', name: 'Door Paint', qty: 1, unit: getPrice(70, 300.00), baseUnit: 300.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       { id: 71, category: 'trades', name: 'Tool Expenses', qty: 1, unit: getPrice(71, 2000.00), baseUnit: 2000.00, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 72, category: 'trades', name: 'Trusses Package', qty: 1, unit: getPrice(72, 8000.00), baseUnit: 8000.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 73, category: 'trades', name: 'Bifold Door', qty: 0, unit: getPrice(73, 12000.00), baseUnit: 1200.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
+      { id: 73, category: 'trades', name: 'Bifold Door', qty: 1, unit: getPrice(73, 12000.00), baseUnit: 1200.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
       { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 }
     ];
     setItems(initialItems);
@@ -462,25 +462,40 @@ const QuoteEditor = () => {
     
     const updateSize = (index, field, value) => {
       const newSizes = [...tempSizes];
-      newSizes[index][field] = Math.max(field === 'qty' ? 1 : 0, Number(value) || (field === 'qty' ? 1 : 0));
+      if (value === '' || value === null) {
+        // Allow empty input (will show as blank in the field)
+        newSizes[index][field] = '';
+      } else {
+        const numValue = Number(value);
+        newSizes[index][field] = Math.max(field === 'qty' ? 1 : 0, isNaN(numValue) ? (field === 'qty' ? 1 : 0) : numValue);
+      }
       setTempSizes(newSizes);
     };
     
     const handleSave = () => {
-      onSave(tempSizes);
+      // Convert empty strings to 0 before saving
+      const cleanedSizes = tempSizes.map(size => ({
+        width: size.width === '' ? 0 : size.width,
+        height: size.height === '' ? 0 : size.height,
+        qty: size.qty === '' ? 1 : size.qty
+      }));
+      onSave(cleanedSizes);
       onClose();
     };
     
     const isWindow = item.name.toLowerCase().includes('window');
     
     const getTotalQty = () => {
-      return tempSizes.reduce((sum, size) => sum + (size.qty || 1), 0);
+      return tempSizes.reduce((sum, size) => sum + (Number(size.qty) || 1), 0);
     };
     
     const getTotalPerimeter = () => {
       return tempSizes.reduce((sum, size) => {
-        const perimeter = isWindow ? 2 * (size.width + size.height) : size.width + 2 * size.height;
-        return sum + perimeter * (size.qty || 1);
+        const w = Number(size.width) || 0;
+        const h = Number(size.height) || 0;
+        const qty = Number(size.qty) || 1;
+        const perimeter = isWindow ? 2 * (w + h) : w + 2 * h;
+        return sum + perimeter * qty;
       }, 0);
     };
     
@@ -534,13 +549,13 @@ const QuoteEditor = () => {
                   <div className="text-sm text-slate-700 w-32 text-right">
                     <div className="font-medium">
                       {(isWindow 
-                        ? (2 * (size.width + size.height))
-                        : (size.width + 2 * size.height)).toFixed(1)} ft
+                        ? (2 * ((Number(size.width) || 0) + (Number(size.height) || 0)))
+                        : ((Number(size.width) || 0) + 2 * (Number(size.height) || 0))).toFixed(1)} ft
                     </div>
                     <div className="text-xs text-slate-500">
                       × {size.qty || 1} = {(isWindow 
-                        ? (2 * (size.width + size.height) * (size.qty || 1))
-                        : ((size.width + 2 * size.height) * (size.qty || 1))).toFixed(1)} ft
+                        ? (2 * ((Number(size.width) || 0) + (Number(size.height) || 0)) * (Number(size.qty) || 1))
+                        : (((Number(size.width) || 0) + 2 * (Number(size.height) || 0)) * (Number(size.qty) || 1))).toFixed(1)} ft
                     </div>
                   </div>
                   <button
