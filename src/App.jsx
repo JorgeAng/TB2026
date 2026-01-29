@@ -4,6 +4,7 @@ import { jsPDF } from 'jspdf';
 
 const QuoteEditor = () => {
   const [dimensions, setDimensions] = useState({ width: 0, length: 0, height: 16 });
+  const [studSize, setStudSize] = useState('2x6'); // '2x6' or '2x8'
   const [config, setConfig] = useState({
     management: 0.07,
     pst: 0.07,
@@ -125,31 +126,58 @@ const QuoteEditor = () => {
     70: () => 1, // Door Paint - manual entry
     71: () => 1, // Tool Expenses
     72: () => 1, // Trusses Package - manual entry
-    73: () => 1, // Bifold Door - manual entry
+    73: () => 0, // Bifold Door - manual entry
     74: () => 0  // Overhead Door - manual entry
+  };
+
+  // Price definitions based on stud size
+  const studPrices = {
+    '2x6': {
+      studs: 11.26,
+      topPlates: 11.26,
+      extraTopPlates: 11.26,
+      bottomPlates: 24.19
+    },
+    '2x8': {
+      studs: 16.19,
+      topPlates: 16.19,
+      extraTopPlates: 16.19,
+      bottomPlates: 32.40
+    }
   };
 
   // Initialize items with formulas
   useEffect(() => {
-    const getPrice = (id, basePrice) => defaultPrices[id] !== undefined ? defaultPrices[id] : basePrice;
+    // Get prices based on current stud size
+    const currentStudPrices = studPrices[studSize];
+    
+    // Helper function to get price - but NOT for stud-dependent items (1,2,3,4)
+    const getPrice = (id, basePrice) => {
+      // For stud-dependent items, always use the stud size prices, ignore defaults
+      if (id === 1 || id === 2 || id === 3 || id === 4) {
+        return basePrice;
+      }
+      // For all other items, use saved defaults or base price
+      return defaultPrices[id] !== undefined ? defaultPrices[id] : basePrice;
+    };
     
     const initialItems = [
       // Framing Lumber
-      { id: 1, category: 'framing_lumber', name: '2x6 Studs 16\'', qty: 135, unit: getPrice(1, 18.19), baseUnit: 18.19, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 2, category: 'framing_lumber', name: 'Top Plates', qty: 27, unit: getPrice(2, 6.03), baseUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 3, category: 'framing_lumber', name: 'Extra Top Plates', qty: 14, unit: getPrice(3, 6.03), baseUnit: 6.03, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 4, category: 'framing_lumber', name: 'Bottom Plates', qty: 11, unit: getPrice(4, 36.18), baseUnit: 36.18, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 1, category: 'framing_lumber', name: `${studSize} Studs 16'`, qty: 135, unit: getPrice(1, currentStudPrices.studs), baseUnit: currentStudPrices.studs, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 2, category: 'framing_lumber', name: 'Top Plates', qty: 27, unit: getPrice(2, currentStudPrices.topPlates), baseUnit: currentStudPrices.topPlates, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 3, category: 'framing_lumber', name: 'Extra Top Plates', qty: 14, unit: getPrice(3, currentStudPrices.extraTopPlates), baseUnit: currentStudPrices.extraTopPlates, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 4, category: 'framing_lumber', name: 'Bottom Plates', qty: 11, unit: getPrice(4, currentStudPrices.bottomPlates), baseUnit: currentStudPrices.bottomPlates, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 5, category: 'framing_lumber', name: 'Headers', qty: 95, unit: getPrice(5, 7.10), baseUnit: 7.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 6, category: 'framing_lumber', name: 'LVL Header Material', qty: 0, unit: getPrice(6, 50.00), baseUnit: 50.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
-      { id: 7, category: 'framing_lumber', name: 'Outside Wall Strapping', qty: 90, unit: getPrice(7, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 8, category: 'framing_lumber', name: 'Inside Wall Strapping', qty: 90, unit: getPrice(8, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 9, category: 'framing_lumber', name: 'Roof Strapping', qty: 122, unit: getPrice(9, 9.88), baseUnit: 9.88, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 7, category: 'framing_lumber', name: 'Outside Wall Strapping', qty: 90, unit: getPrice(7, 8.59), baseUnit: 8.59, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 8, category: 'framing_lumber', name: 'Inside Wall Strapping', qty: 90, unit: getPrice(8, 5.39), baseUnit: 5.39, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 9, category: 'framing_lumber', name: 'Roof Strapping', qty: 122, unit: getPrice(9, 8.59), baseUnit: 8.59, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 10, category: 'framing_lumber', name: '3/4" Plywood (bi-fold)', qty: 0, unit: getPrice(10, 85.00), baseUnit: 85.00, enabled: false, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       
       // Fasteners & Anchoring
       { id: 11, category: 'fasteners', name: 'Anchor Bolts', qty: 45, unit: getPrice(11, 2.23), baseUnit: 2.23, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 12, category: 'fasteners', name: 'Paslode Nails 2⅜"', qty: 2, unit: getPrice(12, 6.73), baseUnit: 6.73, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
-      { id: 13, category: 'fasteners', name: 'Paslode Nails 3¼"', qty: 3, unit: getPrice(13, 75.50), baseUnit: 75.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
+      { id: 13, category: 'fasteners', name: 'Paslode Nails 3¼"', qty: 3, unit: getPrice(13, 112.50), baseUnit: 112.50, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 14, category: 'fasteners', name: 'Exterior Metal Screws', qty: 6, unit: getPrice(14, 0.10), baseUnit: 0.10, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 15, category: 'fasteners', name: 'Interior Metal Screws', qty: 5, unit: getPrice(15, 0.08), baseUnit: 0.08, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       { id: 16, category: 'fasteners', name: 'Staples', qty: 4, unit: getPrice(16, 11.87), baseUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
@@ -233,9 +261,9 @@ const QuoteEditor = () => {
       { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 }
     ];
     setItems(initialItems);
-  }, [defaultPrices]);
+  }, [defaultPrices, studSize]);
 
-  // Recalculate quantities when dimensions change (only for items without manual override)
+  // Recalculate quantities when dimensions or stud spacing changes
   useEffect(() => {
     setItems(prevItems => {
       // Helper function to get total openings perimeter
@@ -613,6 +641,7 @@ const QuoteEditor = () => {
       projectName,
       dimensions,
       config,
+      studSize, // Save stud size
       items // This now includes manualOverride flags and defaultUnit
     };
     console.log('Saving project:', projectName);
@@ -636,6 +665,7 @@ const QuoteEditor = () => {
     console.log('Loading project:', projectName);
     setDimensions(data.dimensions);
     setConfig(data.config);
+    setStudSize(data.studSize || '2x6'); // Load stud size with default fallback
     // Load items as-is from the saved project
     setItems(data.items.map(item => ({
       ...item,
@@ -670,7 +700,7 @@ const QuoteEditor = () => {
     // Building dimensions
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun}`, margin, yPos);
+    doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun} | Stud: ${studSize}`, margin, yPos);
     yPos += 5;
     doc.text(`Floor: ${floorArea} sqft | Wall: ${Math.ceil(wallArea)} sqft | Roof: ${Math.ceil(roofArea)} sqft`, margin, yPos);
     yPos += 10;
@@ -802,6 +832,34 @@ const QuoteEditor = () => {
             {/* Building Dimensions */}
             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-200 mb-6">
               <h2 className="text-base sm:text-lg font-semibold text-indigo-900 mb-4">🏗️ Building Dimensions</h2>
+              
+              {/* Stud Size Toggle */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-indigo-700 mb-2">Stud Size</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setStudSize('2x6')}
+                    className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                      studSize === '2x6' 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'bg-white text-indigo-600 border-2 border-indigo-300 hover:bg-indigo-50'
+                    }`}
+                  >
+                    2x6
+                  </button>
+                  <button
+                    onClick={() => setStudSize('2x8')}
+                    className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                      studSize === '2x8' 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'bg-white text-indigo-600 border-2 border-indigo-300 hover:bg-indigo-50'
+                    }`}
+                  >
+                    2x8
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-indigo-700 mb-2">Width (ft)</label>
@@ -832,7 +890,19 @@ const QuoteEditor = () => {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-indigo-700 mb-2">Stud Spacing (inches)</label>
+                  <select
+                    value={config.studSpacing}
+                    onChange={(e) => setConfig({...config, studSpacing: Number(e.target.value)})}
+                    className="w-full px-4 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value={12}>12"</option>
+                    <option value={16}>16"</option>
+                    <option value={24}>24"</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-indigo-700 mb-2">Roof Pitch (Rise/Run)</label>
                   <div className="flex gap-2 items-center">
@@ -851,7 +921,6 @@ const QuoteEditor = () => {
                       className="w-20 px-3 py-2 text-black font-semibold border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="12"
                     />
-                    <span className="text-indigo-700 text-sm ml-2">(e.g., 4/12)</span>
                   </div>
                 </div>
                 <div>
