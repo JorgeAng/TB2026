@@ -146,8 +146,11 @@ const QuoteEditor = () => {
     }
   };
 
-  // Initialize items with formulas
+  // Initialize items with formulas - ONLY runs on first load
   useEffect(() => {
+    // Only initialize if items array is empty
+    if (items.length > 0) return;
+
     // Get prices based on current stud size
     const currentStudPrices = studPrices[studSize];
     
@@ -261,7 +264,29 @@ const QuoteEditor = () => {
       { id: 74, category: 'trades', name: 'Overhead Door', qty: 0, unit: getPrice(74, 2500.00), baseUnit: 2500.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 }
     ];
     setItems(initialItems);
-  }, [defaultPrices, studSize]);
+  }, []); // Only run once on mount
+
+  // Separate effect to update framing lumber prices when stud size changes
+  useEffect(() => {
+    // Skip if items aren't initialized yet
+    if (items.length === 0) return;
+
+    const currentStudPrices = studPrices[studSize];
+    
+    setItems(prevItems => prevItems.map(item => {
+      // Only update framing lumber stud-dependent items (1-4)
+      if (item.id === 1) {
+        return { ...item, unit: currentStudPrices.studs, baseUnit: currentStudPrices.studs, name: `${studSize} Studs 16'` };
+      } else if (item.id === 2) {
+        return { ...item, unit: currentStudPrices.topPlates, baseUnit: currentStudPrices.topPlates };
+      } else if (item.id === 3) {
+        return { ...item, unit: currentStudPrices.extraTopPlates, baseUnit: currentStudPrices.extraTopPlates };
+      } else if (item.id === 4) {
+        return { ...item, unit: currentStudPrices.bottomPlates, baseUnit: currentStudPrices.bottomPlates };
+      }
+      return item;
+    }));
+  }, [studSize]);
 
   // Recalculate quantities when dimensions or stud spacing changes
   useEffect(() => {
