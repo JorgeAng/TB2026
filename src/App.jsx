@@ -186,8 +186,8 @@ const QuoteEditor = () => {
       { id: 16, category: 'fasteners', name: 'Staples', qty: 4, unit: getPrice(16, 11.87), baseUnit: 11.87, enabled: true, hasFormula: true, manualOverride: false, manualPriceOverride: false },
       
       // Windows & Doors (Exterior)
-      { id: 17, category: 'windows_doors', name: 'Windows', qty: 2, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
-      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 1, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 0, height: 0, qty: 1}], totalPerimeter: 0 },
+      { id: 17, category: 'windows_doors', name: 'Windows', qty: 2, unit: getPrice(17, 560.70), baseUnit: 560.70, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 3, height: 5, qty: 1}], totalPerimeter: 0 },
+      { id: 18, category: 'windows_doors', name: 'Steel Man Door', qty: 1, unit: getPrice(18, 693.00), baseUnit: 693.00, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false, hasSizing: true, sizes: [{width: 3, height: 7, qty: 1}], totalPerimeter: 0 },
       { id: 19, category: 'windows_doors', name: 'Door Handle', qty: 1, unit: getPrice(19, 89.99), baseUnit: 89.99, enabled: true, hasFormula: false, manualOverride: false, manualPriceOverride: false },
       
       // Exterior Metal – Roofing & Walls
