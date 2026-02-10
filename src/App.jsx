@@ -709,104 +709,296 @@ const QuoteEditor = () => {
     .filter(key => key.startsWith('quote_'))
     .map(key => key.replace('quote_', ''));
 
-  // Export Quote
+  // Export Quote — styled to match the app's visual design
   const exportQuote = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    let yPos = 20;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const PW = doc.internal.pageSize.getWidth();
+    const PH = doc.internal.pageSize.getHeight();
+    const ML = 28, MR = 28;
+    const CW = PW - ML - MR;
 
-    // Title
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Project: ${projectName || 'Unnamed Project'}`, margin, yPos);
-    yPos += 8;
+    let y = 0;
 
-    // Building dimensions
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Building: ${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}' | Roof: ${config.roofPitchRise}/${config.roofPitchRun} | Stud: ${studSize}`, margin, yPos);
-    yPos += 5;
-    doc.text(`Floor: ${floorArea} sqft | Wall: ${Math.ceil(wallArea)} sqft | Roof: ${Math.ceil(roofArea)} sqft`, margin, yPos);
-    yPos += 10;
+    const newPage = () => { doc.addPage(); y = 28; };
+    const checkY = (needed) => { if (y + needed > PH - 36) newPage(); };
+    const setFill = (r, g, b) => doc.setFillColor(r, g, b);
+    const setDraw = (r, g, b) => doc.setDrawColor(r, g, b);
+    const setTxt  = (r, g, b) => doc.setTextColor(r, g, b);
+    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    // Items by category
+    const categoryColors = {
+      framing_lumber:  { header: [79, 70, 229],   text: [255,255,255], alt: [238, 242, 255] },
+      fasteners:       { header: [124, 58, 237],  text: [255,255,255], alt: [245, 240, 255] },
+      windows_doors:   { header: [37, 99, 235],   text: [255,255,255], alt: [239, 246, 255] },
+      exterior_metal:  { header: [15, 118, 110],  text: [255,255,255], alt: [240, 253, 250] },
+      exterior_trim:   { header: [180, 83, 9],    text: [255,255,255], alt: [255, 251, 235] },
+      interior_metal:  { header: [55, 65, 81],    text: [255,255,255], alt: [248, 250, 252] },
+      insulation:      { header: [3, 105, 161],   text: [255,255,255], alt: [240, 249, 255] },
+      drywall:         { header: [100, 116, 139], text: [255,255,255], alt: [248, 250, 252] },
+      interior_doors:  { header: [21, 128, 61],   text: [255,255,255], alt: [240, 253, 244] },
+      mechanical:      { header: [161, 21, 21],   text: [255,255,255], alt: [254, 242, 242] },
+      kokiak:          { header: [51, 65, 85],    text: [255,255,255], alt: [248, 250, 252] },
+      trades:          { header: [30, 64, 175],   text: [255,255,255], alt: [239, 246, 255] }
+    };
+
+    // ── HEADER BANNER ──────────────────────────────────────────────────────
+    setFill(30, 64, 175);
+    doc.rect(0, 0, PW, 72, 'F');
+    setFill(99, 132, 255);
+    doc.rect(0, 68, PW, 4, 'F');
+
+    setTxt(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('TIMBILT CONSTRUCTION', ML, 28);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Building Quote', ML, 44);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(projectName || 'Unnamed Project', PW - MR, 28, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    const today = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text(today, PW - MR, 42, { align: 'right' });
+
+    y = 84;
+
+    // ── BUILDING SPECS CARD ────────────────────────────────────────────────
+    checkY(80);
+    setFill(248, 250, 252);
+    setDraw(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(ML, y, CW, 68, 4, 4, 'FD');
+
+    setTxt(30, 64, 175);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text('BUILDING SPECIFICATIONS', ML + 10, y + 14);
+
+    const specs = [
+      { label: 'Dimensions', value: `${dimensions.width}' × ${dimensions.length}' × ${dimensions.height}'` },
+      { label: 'Stud Size',  value: studSize },
+      { label: 'Roof Pitch', value: `${config.roofPitchRise}/${config.roofPitchRun}` },
+      { label: 'Floor Area', value: `${floorArea.toLocaleString()} sqft` },
+      { label: 'Wall Area',  value: `${Math.ceil(wallArea).toLocaleString()} sqft` },
+      { label: 'Roof Area',  value: `${Math.ceil(roofArea).toLocaleString()} sqft` },
+    ];
+    const boxW = CW / specs.length;
+    specs.forEach((s, i) => {
+      const bx = ML + i * boxW;
+      setTxt(71, 85, 105);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text(s.label.toUpperCase(), bx + boxW / 2, y + 32, { align: 'center' });
+      setTxt(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(s.value, bx + boxW / 2, y + 46, { align: 'center' });
+      if (i < specs.length - 1) {
+        setDraw(203, 213, 225);
+        doc.setLineWidth(0.3);
+        doc.line(bx + boxW, y + 22, bx + boxW, y + 58);
+      }
+    });
+    y += 78;
+
+    // ── SUMMARY CARDS ──────────────────────────────────────────────────────
+    checkY(56);
+    const summaryCards = [
+      { label: 'Materials',      value: `$${fmt(materialTotal)}`,        bg: [219,234,254], border: [147,197,253], txt: [29,78,216] },
+      { label: 'Building Cost',  value: `$${fmt(buildingWithoutLabor)}`, bg: [220,252,231], border: [134,239,172], txt: [21,128,61] },
+      { label: 'Total Quoted',   value: `$${fmt(totalQuoted)}`,          bg: [243,232,255], border: [196,181,253], txt: [109,40,217] },
+      { label: 'Final (+ GST)',  value: `$${fmt(finalPrice)}`,           bg: [255,237,213], border: [253,186,116], txt: [154,52,18] },
+    ];
+    const cardW = (CW - 9) / 4;
+    summaryCards.forEach((c, i) => {
+      const cx = ML + i * (cardW + 3);
+      setFill(...c.bg);
+      setDraw(...c.border);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(cx, y, cardW, 46, 3, 3, 'FD');
+      setTxt(...c.txt);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text(c.label.toUpperCase(), cx + cardW / 2, y + 14, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(c.value, cx + cardW / 2, y + 32, { align: 'center' });
+    });
+    y += 58;
+
+    setFill(241, 245, 249);
+    doc.rect(ML, y, CW, 1, 'F');
+    y += 10;
+
+    // Column layout reference
+    const COL   = { name: ML, qty: ML + CW * 0.52, unit: ML + CW * 0.68, total: ML + CW * 0.84 };
+    const COL_W = { name: CW * 0.50, qty: CW * 0.14, unit: CW * 0.14, total: CW * 0.16 };
+
+    // ── ITEMS BY CATEGORY ──────────────────────────────────────────────────
     Object.entries(categories).forEach(([key, label]) => {
       const catItems = items.filter(i => i.category === key && i.enabled);
       if (catItems.length === 0) return;
 
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
+      const catTotal = catItems.reduce((s, i) => s + i.qty * i.unit, 0);
+      const colors = categoryColors[key] || categoryColors.trades;
+      const ROW_H = 16;
+      const HEADER_H = 20;
 
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.text(label, margin, yPos);
-      yPos += 6;
+      checkY(HEADER_H + ROW_H);
 
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'normal');
+      // Category header bar
+      setFill(...colors.header);
+      doc.rect(ML, y, CW, HEADER_H, 'F');
+      setTxt(...colors.text);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      // Strip emoji for PDF rendering
+      const cleanLabel = label.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').replace(/[\u2600-\u27FF]/g, '').trim();
+      doc.text(cleanLabel, ML + 8, y + 13);
+      doc.setFontSize(8);
+      doc.text(`Subtotal: $${fmt(catTotal)}`, PW - MR - 4, y + 13, { align: 'right' });
+      y += HEADER_H;
 
-      catItems.forEach(item => {
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
+      // Column labels row
+      checkY(14);
+      setFill(245, 247, 250);
+      doc.rect(ML, y, CW, 13, 'F');
+      setTxt(100, 116, 139);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.text('ITEM',       COL.name + 4,              y + 9);
+      doc.text('QTY',        COL.qty  + COL_W.qty  / 2, y + 9, { align: 'center' });
+      doc.text('UNIT PRICE', COL.unit + COL_W.unit / 2, y + 9, { align: 'center' });
+      doc.text('TOTAL',      COL.total + COL_W.total,   y + 9, { align: 'right' });
+      y += 13;
+
+      // Item rows
+      catItems.forEach((item, idx) => {
+        checkY(ROW_H);
+
+        if (idx % 2 === 1) {
+          setFill(...colors.alt);
+        } else {
+          setFill(255, 255, 255);
         }
+        doc.rect(ML, y, CW, ROW_H, 'F');
 
-        const itemText = `${item.name}`;
-        const qtyText = `${item.qty} × $${item.unit.toFixed(2)}`;
-        const totalText = `$${(item.qty * item.unit).toFixed(2)}`;
+        setDraw(226, 232, 240);
+        doc.setLineWidth(0.2);
+        doc.line(ML, y + ROW_H, ML + CW, y + ROW_H);
 
-        doc.text(itemText, margin + 2, yPos);
-        doc.text(qtyText, pageWidth - margin - 60, yPos);
-        doc.text(totalText, pageWidth - margin - 30, yPos, { align: 'right' });
-        yPos += 5;
+        setTxt(30, 41, 59);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+
+        // Truncate name if it overflows the column
+        const maxNameW = COL_W.name - 8;
+        let nameStr = item.name;
+        while (doc.getTextWidth(nameStr) > maxNameW && nameStr.length > 10) {
+          nameStr = nameStr.slice(0, -2) + '...';
+        }
+        doc.text(nameStr, COL.name + 4, y + 11);
+
+        setTxt(71, 85, 105);
+        doc.text(item.qty.toLocaleString(), COL.qty + COL_W.qty / 2, y + 11, { align: 'center' });
+        doc.text(`$${fmt(item.unit)}`,      COL.unit + COL_W.unit / 2, y + 11, { align: 'center' });
+
+        setTxt(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.text(`$${fmt(item.qty * item.unit)}`, COL.total + COL_W.total, y + 11, { align: 'right' });
+
+        y += ROW_H;
       });
 
-      yPos += 3;
+      y += 6;
     });
 
-    // Totals section
-    if (yPos > 200) {
-      doc.addPage();
-      yPos = 20;
-    }
+    // ── QUOTE BREAKDOWN ────────────────────────────────────────────────────
+    checkY(190);
+    y += 8;
 
-    yPos += 5;
-    doc.setFontSize(10);
+    setFill(30, 64, 175);
+    doc.rect(ML, y, CW, 20, 'F');
+    setTxt(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('QUOTE BREAKDOWN', ML + 8, y + 13);
+    y += 20;
 
-    const totals = [
-      ['Materials Total:', `$${materialTotal.toFixed(2)}`],
-      ['Trades & Quoted Items:', `$${tradesTotal.toFixed(2)}`],
-      ['Trades & Quoted Items 10%:', `$${(tradesWithFee - tradesTotal).toFixed(2)}`],
-      ['PST (7%):', `$${pst.toFixed(2)}`],
-      ['Waste (5%):', `$${waste.toFixed(2)}`],
-      ['Profit (25%):', `$${profit.toFixed(2)}`],
-      ['', ''],
-      ['Building Cost (no labor):', `$${buildingWithoutLabor.toFixed(2)}`],
-      ['Labor:', `$${labor.toFixed(2)}`],
-      ['', ''],
-      ['TOTAL QUOTED:', `$${totalQuoted.toFixed(2)}`],
-      ['GST (5%):', `$${gst.toFixed(2)}`],
-      ['', '']
+    setFill(248, 250, 252);
+    doc.rect(ML, y, CW, 152, 'F');
+
+    const breakdownRows = [
+      { label: 'Materials Total',                                                            value: `$${fmt(materialTotal)}`,              bold: false },
+      { label: 'Trades & Quoted Items',                                                      value: `$${fmt(tradesTotal)}`,                 bold: false },
+      { label: 'Trades & Quoted Items Fee (10%)',                                            value: `$${fmt(tradesWithFee - tradesTotal)}`, bold: false },
+      { label: `PST (${(config.pst * 100).toFixed(0)}%)`,                                   value: `$${fmt(pst)}`,                         bold: false },
+      { label: `Waste (${(config.waste * 100).toFixed(0)}%)`,                               value: `$${fmt(waste)}`,                       bold: false },
+      { label: `Profit (${(config.profit * 100).toFixed(0)}%)`,                             value: `$${fmt(profit)}`,                      bold: false },
+      null,
+      { label: 'Building Cost (no labor)',                                                   value: `$${fmt(buildingWithoutLabor)}`,        bold: true  },
+      { label: `Labor (${floorArea.toLocaleString()} sqft × $${config.laborPerSqft}/sqft)`, value: `$${fmt(labor)}`,                       bold: false },
+      null,
+      { label: 'Total Quoted',                                                               value: `$${fmt(totalQuoted)}`,                 bold: true  },
+      { label: `GST (${(config.gst * 100).toFixed(0)}%)`,                                   value: `$${fmt(gst)}`,                         bold: false },
     ];
 
-    totals.forEach(([label, value]) => {
-      if (label === '') {
-        yPos += 2;
+    let by = y + 12;
+    breakdownRows.forEach(row => {
+      if (!row) {
+        setDraw(203, 213, 225);
+        doc.setLineWidth(0.4);
+        doc.line(ML + 8, by + 2, ML + CW - 8, by + 2);
+        by += 8;
         return;
       }
-      doc.text(label, margin, yPos);
-      doc.text(value, pageWidth - margin, yPos, { align: 'right' });
-      yPos += 6;
+      setTxt(row.bold ? 15 : 71, row.bold ? 23 : 85, row.bold ? 42 : 105);
+      doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
+      doc.setFontSize(8);
+      doc.text(row.label, ML + 10, by);
+      doc.text(row.value, ML + CW - 10, by, { align: 'right' });
+      by += 11;
     });
+    y += 152;
 
-    // Final price
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('FINAL PRICE:', margin, yPos);
-    doc.text(`$${finalPrice.toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
+    // ── FINAL PRICE BANNER ─────────────────────────────────────────────────
+    checkY(52);
+    y += 8;
+    setFill(30, 64, 175);
+    doc.rect(ML, y, CW, 44, 'F');
+    setFill(99, 132, 255);
+    doc.rect(ML, y, 6, 44, 'F');
+
+    setTxt(219, 234, 254);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('FINAL PRICE (incl. GST)', ML + 14, y + 14);
+    setTxt(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text(`$${fmt(finalPrice)}`, ML + 14, y + 34);
+    setTxt(219, 234, 254);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('All prices in CAD', PW - MR - 4, y + 34, { align: 'right' });
+    y += 52;
+
+    // ── FOOTER on every page ───────────────────────────────────────────────
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      setFill(241, 245, 249);
+      doc.rect(0, PH - 24, PW, 24, 'F');
+      setTxt(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text('Timbilt Construction — Quote generated by Timbilt Quote Editor', ML, PH - 10);
+      doc.text(`Page ${p} of ${totalPages}`, PW - MR, PH - 10, { align: 'right' });
+    }
 
     const safeProjectName = projectName ? projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'quote';
     doc.save(`${safeProjectName}.pdf`);
