@@ -742,9 +742,9 @@ const QuoteEditor = () => {
     };
 
     // ── HEADER BANNER ──────────────────────────────────────────────────────
-    setFill(30, 64, 175);
+    setFill(188, 28, 28);
     doc.rect(0, 0, PW, 72, 'F');
-    setFill(99, 132, 255);
+    setFill(129, 0, 0);
     doc.rect(0, 68, PW, 4, 'F');
 
     setTxt(255, 255, 255);
