@@ -283,7 +283,11 @@ const QuoteEditor = () => {
       const newPostUnit = calcPostUnitPrice(prev, dimensions.height || 16, postSize, postDiameter);
       const newPostBase = calcPostBasePrice(dimensions.height || 16, postSize);
       return prev.map(item => {
-        if (item.id === 101) return { ...item, unit: newPostUnit, baseUnit: newPostBase };
+        // Item 101 (Post): update both unit price AND qty via formula
+        if (item.id === 101) {
+          const newQty = item.manualOverride ? item.qty : Math.ceil((perimeter * 12) / config.studSpacing);
+          return { ...item, unit: newPostUnit, baseUnit: newPostBase, qty: newQty };
+        }
         if (item.hasFormula && !item.manualOverride) {
           if (item.id === 5)  return { ...item, qty: Math.ceil(getTotalOpeningsPerimeter() / 16) };
           if (item.id === 14) return { ...item, qty: Math.ceil(wallArea + roofArea + gableArea) };
