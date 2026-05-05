@@ -33,8 +33,8 @@ const QuoteEditor = () => {
   const cosAngle = Math.cos(angleRad);
   const run = (dimensions.width || 0) / 2;
   const rise = run * roofPitch;
-  const rafterLen = (run / cosAngle) + (config.overhang*2/12);
-  const roofArea = rafterLen * ((dimensions.length || 0) + (config.overhang*2/12))* 2;
+  const rafterLen = (run / cosAngle) + (config.overhang * 2/12);
+  const roofArea = rafterLen * ((dimensions.length || 0) + (config.overhang * 2/12))* 2;
   const gableArea = (dimensions.width || 0) * rise * 2;
   const wallArea = wallAreaRect;
 
